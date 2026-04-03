@@ -1,0 +1,118 @@
+%% Sequence Diagram — User Onboarding Journey (9-Step Wizard)
+%% Next-Gen Observability Onboarding Platform
+
+sequenceDiagram
+    autonumber
+    participant User as App Team User
+    participant UI as Frontend SPA
+    participant API as Backend API
+    participant DB as PostgreSQL
+    participant CE as Capacity Engine
+    participant GE as Governance Engine
+    participant Grafana as Grafana MCP
+    participant Jira as Jira MCP
+    participant Confluence as Confluence MCP
+    participant ServiceNow as ServiceNow MCP
+
+    Note over User,ServiceNow: Step 1 — Application Identity
+
+    User->>UI: Enter app name, app code, portfolio
+    UI->>API: GET /api/v1/lookup/portfolios
+    API->>DB: Query application_metadata
+    DB-->>API: Portfolio list
+    API-->>UI: Portfolio options
+    UI->>API: POST /api/v1/onboarding (draft)
+    API->>DB: INSERT onboarding_requests (status=draft)
+    DB-->>API: Created request with UUID
+    API-->>UI: { id, status: "draft" }
+
+    Note over User,ServiceNow: Step 2 — Technical Profile
+
+    User->>UI: Select hosting platform, tech stack
+    UI->>API: PUT /api/v1/onboarding/{id}
+    API->>DB: UPDATE hosting_platform, tech_stack
+    API-->>UI: Updated request
+
+    Note over User,ServiceNow: Step 3 — Telemetry Signal Selection
+
+    User->>UI: Toggle Metrics, Logs, Traces, Profiles
+    User->>UI: Configure per-signal details
+    UI->>API: PUT /api/v1/onboarding/{id}
+    API->>DB: UPSERT telemetry_scopes
+    API-->>UI: Updated request with telemetry_scope
+
+    Note over User,ServiceNow: Step 4 — Environment Matrix
+
+    User->>UI: Select environments per signal (dev, qa, staging, prod)
+    UI->>API: PUT /api/v1/onboarding/{id}
+    API->>DB: UPSERT environment_readiness rows
+    API-->>UI: Updated request
+
+    Note over User,ServiceNow: Step 5 — Capacity Check
+
+    UI->>API: POST /api/v1/capacity/check
+    API->>Grafana: Query current usage per signal (MCP)
+    Grafana-->>API: Usage data (series, MB/s, spans/sec)
+    API->>CE: Evaluate capacity (thresholds + projections)
+    CE-->>API: CapacityCheckResponse (GREEN/AMBER/RED)
+    API->>DB: INSERT capacity_assessments
+    API-->>UI: { overall_status, signal_results[], recommendations[] }
+    UI->>User: Display capacity traffic lights
+
+    alt RED — Capacity Blocked
+        UI->>User: Show block message with escalation link
+    else AMBER — Proceed with Monitoring
+        UI->>User: Show warnings, allow continuation
+    else GREEN — All Clear
+        UI->>User: Show green status, proceed
+    end
+
+    Note over User,ServiceNow: Step 6 — Similarity Search
+
+    UI->>API: POST /api/v1/similarity/search
+    API->>DB: Vector similarity query (pgvector)
+    DB-->>API: Top-K matched applications
+    API->>DB: INSERT similarity_matches
+    API-->>UI: { matches[]: { app, score, exporters, dashboards, alerts } }
+    UI->>User: Display matched apps with reusable artifacts
+
+    Note over User,ServiceNow: Step 7 — Governance Validation
+
+    UI->>API: POST /api/v1/governance/validate
+    API->>GE: Run all HARD + SOFT rules
+    GE-->>API: GovernanceResult { passed, score, violations[] }
+    API-->>UI: { passed, score, hard_violations[], soft_violations[] }
+
+    alt HARD Violation Detected
+        UI->>User: Block submission, show violations + suggestions
+    else SOFT Violations Only
+        UI->>User: Show warnings, allow override
+    else All Rules Pass
+        UI->>User: Show green governance score
+    end
+
+    Note over User,ServiceNow: Step 8 — Artifact Preview & Generation
+
+    UI->>API: POST /api/v1/artifacts/preview
+    API-->>UI: Preview of CR, Epic, Stories, Tasks
+    User->>UI: Review and approve artifacts
+    UI->>API: POST /api/v1/artifacts/generate
+    API->>DB: INSERT artifacts (status=draft)
+    API->>Jira: Create Epic + Stories (MCP)
+    Jira-->>API: External IDs + URLs
+    API->>ServiceNow: Create CTASKs (MCP)
+    ServiceNow-->>API: External IDs + URLs
+    API->>Confluence: Create runbook page (MCP)
+    Confluence-->>API: Page URL
+    API->>DB: UPDATE artifacts (status=synced, external_id, external_url)
+    API-->>UI: { artifacts[]: { type, external_id, external_url } }
+
+    Note over User,ServiceNow: Step 9 — Review & Submit
+
+    UI->>User: Display full summary of onboarding request
+    User->>UI: Click Submit
+    UI->>API: PUT /api/v1/onboarding/{id} (status=submitted)
+    API->>DB: UPDATE status=submitted, submitted_at=now()
+    API->>DB: INSERT audit_logs (action=submitted)
+    API-->>UI: { status: "submitted" }
+    UI->>User: Confirmation with tracking links

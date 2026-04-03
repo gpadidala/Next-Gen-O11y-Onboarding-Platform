@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: observability-onboarding
+  labels:
+    app.kubernetes.io/name: observability-onboarding
+    app.kubernetes.io/part-of: o11y-onboarding-platform
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    description: "Namespace for the Next-Gen Observability Onboarding Platform"

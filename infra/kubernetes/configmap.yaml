@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: observability-onboarding
+  labels:
+    app.kubernetes.io/name: app-config
+    app.kubernetes.io/part-of: o11y-onboarding-platform
+data:
+  APP_ENV: "production"
+  APP_NAME: "o11y-onboarding-platform"
+  LOG_LEVEL: "info"
+  LOG_FORMAT: "json"
+  CORS_ORIGINS: "https://o11y-onboarding.example.com"
+  CORS_ALLOW_METHODS: "GET,POST,PUT,DELETE,OPTIONS"
+  CORS_ALLOW_HEADERS: "Content-Type,Authorization"
+  API_PREFIX: "/api/v1"
+  WORKERS: "4"
+  POSTGRES_HOST: "postgres.observability-onboarding.svc.cluster.local"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "o11y_onboarding"
+  REDIS_HOST: "redis.observability-onboarding.svc.cluster.local"
+  REDIS_PORT: "6379"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.observability.svc.cluster.local:4317"
+  OTEL_SERVICE_NAME: "o11y-onboarding-backend"
+  OTEL_TRACES_SAMPLER: "parentbased_traceidratio"
+  OTEL_TRACES_SAMPLER_ARG: "0.1"

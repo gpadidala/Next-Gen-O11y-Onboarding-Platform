@@ -1,0 +1,38 @@
+%% C4 Level 1 — System Context Diagram
+%% Next-Gen Observability Onboarding Platform
+
+graph TB
+    %% ── Actors ──────────────────────────────────────────────
+    AppTeam["<b>Application Team</b><br/>(Developer / Tech Lead)<br/>Submits onboarding requests<br/>for their applications"]
+    SRE["<b>SRE / Platform Engineer</b><br/>Reviews capacity,<br/>approves onboarding requests,<br/>monitors governance"]
+    PlatformAdmin["<b>Platform Admin</b><br/>Manages governance rules,<br/>lookup data, and<br/>system configuration"]
+
+    %% ── System Under Design ─────────────────────────────────
+    Platform["<b>Observability Onboarding Platform</b><br/><i>(Next-Gen O11y Onboarding)</i><br/>9-step wizard that automates<br/>application onboarding onto<br/>the enterprise LGTM stack"]
+
+    %% ── External Systems ────────────────────────────────────
+    LGTM["<b>Grafana LGTM Stack</b><br/><i>(Mimir, Loki, Tempo, Pyroscope)</i><br/>Metrics, Logs, Traces,<br/>Profiles backends"]
+    Confluence["<b>Confluence</b><br/><i>(Atlassian)</i><br/>Runbook and architecture<br/>documentation wiki"]
+    Jira["<b>Jira</b><br/><i>(Atlassian)</i><br/>Change Requests, Epics,<br/>Stories, Tasks"]
+    ServiceNow["<b>ServiceNow</b><br/><i>(ITSM)</i><br/>Change Tasks (CTASKs),<br/>CMDB records"]
+    CMDB["<b>Enterprise CMDB</b><br/>Source of truth for<br/>application metadata"]
+
+    %% ── Relationships ───────────────────────────────────────
+    AppTeam -->|"Fills onboarding wizard,<br/>selects telemetry signals"| Platform
+    SRE -->|"Reviews capacity &<br/>approves requests"| Platform
+    PlatformAdmin -->|"Configures governance<br/>rules & lookup data"| Platform
+
+    Platform -->|"Queries current usage,<br/>provisions datasources<br/>via MCP"| LGTM
+    Platform -->|"Creates runbook pages<br/>via MCP"| Confluence
+    Platform -->|"Creates Epics / Stories<br/>via MCP"| Jira
+    Platform -->|"Creates CTASKs,<br/>syncs CMDB<br/>via MCP"| ServiceNow
+    CMDB -.->|"Syncs application<br/>metadata"| Platform
+
+    %% ── Styling ─────────────────────────────────────────────
+    classDef person fill:#08427B,stroke:#073B6F,color:#fff,stroke-width:2px
+    classDef system fill:#1168BD,stroke:#0E5CA7,color:#fff,stroke-width:2px
+    classDef external fill:#999999,stroke:#6B6B6B,color:#fff,stroke-width:2px
+
+    class AppTeam,SRE,PlatformAdmin person
+    class Platform system
+    class LGTM,Confluence,Jira,ServiceNow,CMDB external

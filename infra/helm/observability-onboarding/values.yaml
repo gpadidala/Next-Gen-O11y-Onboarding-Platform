@@ -1,0 +1,124 @@
+# Default values for observability-onboarding chart.
+
+global:
+  namespace: observability-onboarding
+  imagePullPolicy: Always
+
+# -- Backend (FastAPI) configuration
+backend:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/o11y-onboarding/backend
+    tag: "latest"
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8000
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+  livenessProbe:
+    path: /api/v1/health
+    initialDelaySeconds: 15
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    path: /api/v1/ready
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+
+# -- Frontend (nginx) configuration
+frontend:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/o11y-onboarding/frontend
+    tag: "latest"
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 101
+    runAsGroup: 101
+    fsGroup: 101
+
+# -- PostgreSQL configuration
+postgres:
+  enabled: true
+  image:
+    repository: pgvector/pgvector
+    tag: "pg16"
+  storage:
+    size: 10Gi
+    storageClassName: ""
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+# -- Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  host: o11y-onboarding.example.com
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  tls:
+    enabled: true
+    secretName: o11y-onboarding-tls
+
+# -- Application configuration (non-sensitive)
+config:
+  APP_ENV: production
+  LOG_LEVEL: info
+  LOG_FORMAT: json
+  CORS_ORIGINS: "https://o11y-onboarding.example.com"
+  CORS_ALLOW_METHODS: "GET,POST,PUT,DELETE,OPTIONS"
+  API_PREFIX: "/api/v1"
+  WORKERS: "4"
+  OTEL_SERVICE_NAME: "o11y-onboarding-backend"
+  OTEL_TRACES_SAMPLER: "parentbased_traceidratio"
+  OTEL_TRACES_SAMPLER_ARG: "0.1"
+
+# -- Secrets (provide via --set or external secret management)
+secrets:
+  DATABASE_URL: ""
+  SECRET_KEY: ""
+  OPENAI_API_KEY: ""
+  GRAFANA_API_KEY: ""
+  POSTGRES_USER: ""
+  POSTGRES_PASSWORD: ""

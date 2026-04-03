@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" fill="none">
+  <!-- Background pill -->
+  <rect x="0" y="4" width="200" height="40" rx="8" fill="#0f172a"/>
+
+  <!-- Signal dots representing metrics, logs, traces -->
+  <circle cx="24" cy="24" r="5" fill="#8b5cf6"/>
+  <circle cx="38" cy="24" r="5" fill="#06b6d4"/>
+  <circle cx="52" cy="24" r="5" fill="#f97316"/>
+
+  <!-- O11y text -->
+  <text x="68" y="30" font-family="Inter, system-ui, sans-serif" font-size="20" font-weight="700" fill="#f8fafc">
+    O11y
+  </text>
+
+  <!-- Platform text -->
+  <text x="122" y="30" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="400" fill="#94a3b8">
+    Platform
+  </text>
+</svg>

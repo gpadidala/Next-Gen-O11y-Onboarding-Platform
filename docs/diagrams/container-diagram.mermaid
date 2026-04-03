@@ -1,0 +1,52 @@
+%% C4 Level 2 — Container Diagram
+%% Next-Gen Observability Onboarding Platform
+
+graph TB
+    %% ── Users ───────────────────────────────────────────────
+    User["<b>User</b><br/>(App Team / SRE / Admin)<br/>Browser"]
+
+    subgraph platform ["Observability Onboarding Platform"]
+        direction TB
+
+        %% ── Frontend ────────────────────────────────────────
+        Frontend["<b>Frontend SPA</b><br/><i>React 18 + TypeScript</i><br/><i>Vite + TailwindCSS</i><br/>9-step onboarding wizard,<br/>capacity dashboard,<br/>admin panel"]
+
+        %% ── Backend API ─────────────────────────────────────
+        Backend["<b>Backend API</b><br/><i>Python 3.12 + FastAPI</i><br/><i>Pydantic v2 + SQLAlchemy 2.0</i><br/>REST API, business logic,<br/>capacity engine,<br/>governance engine"]
+
+        %% ── Database ────────────────────────────────────────
+        DB["<b>PostgreSQL 16</b><br/><i>pgvector extension</i><br/>Onboarding requests,<br/>capacity assessments,<br/>similarity embeddings,<br/>audit logs"]
+
+        %% ── MCP Clients ────────────────────────────────────
+        MCPClients["<b>MCP Client Layer</b><br/><i>aiohttp + tenacity</i><br/>HTTP clients with retry,<br/>circuit breaker, and<br/>error mapping"]
+    end
+
+    %% ── External MCP Servers ────────────────────────────────
+    GrafanaMCP["<b>Grafana MCP Server</b><br/><i>HTTP/JSON</i><br/>Datasource provisioning,<br/>dashboard management,<br/>usage queries"]
+    ConfluenceMCP["<b>Confluence MCP Server</b><br/><i>HTTP/JSON</i><br/>Page creation,<br/>template rendering"]
+    JiraMCP["<b>Jira MCP Server</b><br/><i>HTTP/JSON</i><br/>Epic / Story / Task<br/>creation & updates"]
+    ServiceNowMCP["<b>ServiceNow MCP Server</b><br/><i>HTTP/JSON</i><br/>CTASK creation,<br/>CMDB sync"]
+
+    %% ── Relationships ───────────────────────────────────────
+    User -->|"HTTPS<br/>port 3000"| Frontend
+    Frontend -->|"REST API<br/>JSON over HTTPS<br/>port 8000"| Backend
+    Backend -->|"asyncpg<br/>TCP 5432"| DB
+    Backend --> MCPClients
+
+    MCPClients -->|"HTTP/JSON<br/>port 8100"| GrafanaMCP
+    MCPClients -->|"HTTP/JSON<br/>port 8101"| ConfluenceMCP
+    MCPClients -->|"HTTP/JSON<br/>port 8102"| JiraMCP
+    MCPClients -->|"HTTP/JSON<br/>port 8103"| ServiceNowMCP
+
+    %% ── Styling ─────────────────────────────────────────────
+    classDef person fill:#08427B,stroke:#073B6F,color:#fff,stroke-width:2px
+    classDef container fill:#438DD5,stroke:#3C7FC0,color:#fff,stroke-width:2px
+    classDef database fill:#438DD5,stroke:#3C7FC0,color:#fff,stroke-width:2px
+    classDef external fill:#999999,stroke:#6B6B6B,color:#fff,stroke-width:2px
+    classDef boundary fill:none,stroke:#444,stroke-width:2px,stroke-dasharray:5
+
+    class User person
+    class Frontend,Backend,MCPClients container
+    class DB database
+    class GrafanaMCP,ConfluenceMCP,JiraMCP,ServiceNowMCP external
+    class platform boundary

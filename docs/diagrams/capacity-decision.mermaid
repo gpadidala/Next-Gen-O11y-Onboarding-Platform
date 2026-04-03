@@ -1,0 +1,70 @@
+%% Flowchart — Capacity Decision Logic
+%% Next-Gen Observability Onboarding Platform
+
+flowchart TD
+    Start([Capacity Check Requested]) --> Input["Gather Input<br/>app_code, tech_stack,<br/>hosting_platform,<br/>selected_signals[],<br/>instance_count"]
+
+    Input --> QueryUsage["Query Current Usage<br/>via Grafana MCP<br/>for each selected signal"]
+
+    QueryUsage --> ForEachSignal{{"For Each Signal<br/>(Metrics / Logs / Traces / Profiles)"}}
+
+    ForEachSignal --> EstimateLoad["Estimate New Load<br/><i>load = base_estimate(tech_stack, signal)</i><br/><i>&times; instance_count</i><br/><i>&times; platform_factor(hosting_platform)</i>"]
+
+    EstimateLoad --> Project["Calculate Projected Usage<br/><i>projected_pct = (current_used + estimated_load)</i><br/><i>&divide; total_capacity &times; 100</i>"]
+
+    Project --> Headroom["Apply Headroom Factor<br/><i>safe_pct = projected_pct &times; 1.2</i><br/>(20% safety margin)"]
+
+    Headroom --> ThresholdCheck{"Evaluate Thresholds<br/><i>safe_pct</i> against limits"}
+
+    %% ── GREEN Path ──────────────────────────────────────────
+    ThresholdCheck -->|"safe_pct < 70%"| Green["GREEN<br/>Decision: ALLOW"]
+    Green --> GreenLabel["Sufficient headroom<br/>No action needed"]
+
+    %% ── AMBER Path ──────────────────────────────────────────
+    ThresholdCheck -->|"70% <= safe_pct < 85%"| Amber{"Amber Sub-check:<br/>Is projected > 80%<br/>without headroom?"}
+    Amber -->|"No"| AmberMonitor["AMBER<br/>Decision: ALLOW_MONITOR<br/>Proceed but watch usage"]
+    Amber -->|"Yes"| AmberNotify["AMBER<br/>Decision: ALLOW_NOTIFY<br/>Proceed + notify<br/>capacity team"]
+
+    %% ── RED Path ────────────────────────────────────────────
+    ThresholdCheck -->|"safe_pct >= 85%"| Red{"Red Sub-check:<br/>Any custom override<br/>provided?"}
+    Red -->|"No"| RedBlock["RED<br/>Decision: BLOCK<br/>Escalation required"]
+    Red -->|"Yes, override present"| RedOverride["RED<br/>Decision: ALLOW_NOTIFY<br/>Override acknowledged,<br/>escalation flagged"]
+
+    %% ── Aggregate ───────────────────────────────────────────
+    GreenLabel --> Aggregate
+    AmberMonitor --> Aggregate
+    AmberNotify --> Aggregate
+    RedBlock --> Aggregate
+    RedOverride --> Aggregate
+
+    Aggregate["Aggregate Signal Results<br/>overall_status = worst(signal_statuses)<br/>overall_decision = worst(signal_decisions)"]
+
+    Aggregate --> Recommend["Generate Recommendations<br/>- Scale-up suggestions (RED)<br/>- Monitoring alerts (AMBER)<br/>- Retention tuning tips<br/>- Alternative backend suggestions"]
+
+    Recommend --> Persist["Persist to DB<br/>capacity_assessments table<br/>with signal_results JSON"]
+
+    Persist --> Response(["Return CapacityCheckResponse<br/>overall_status, overall_decision,<br/>signal_results[], recommendations[]"])
+
+    %% ── Signal-Specific Thresholds (Reference) ─────────────
+    subgraph thresholds ["Signal-Specific Base Estimates"]
+        direction LR
+        MetricsRef["<b>Metrics (Mimir)</b><br/>Base: 500 series/instance<br/>Unit: active series<br/>GREEN < 70% | RED >= 85%"]
+        LogsRef["<b>Logs (Loki)</b><br/>Base: 2 MB/s per instance<br/>Unit: MB/s ingestion<br/>GREEN < 70% | RED >= 85%"]
+        TracesRef["<b>Traces (Tempo)</b><br/>Base: 100 spans/s per instance<br/>Unit: spans/sec<br/>GREEN < 70% | RED >= 85%"]
+        ProfilesRef["<b>Profiles (Pyroscope)</b><br/>Base: 50 MB/day per instance<br/>Unit: MB/day<br/>GREEN < 70% | RED >= 85%"]
+    end
+
+    %% ── Styling ─────────────────────────────────────────────
+    classDef green fill:#27AE60,stroke:#1E8449,color:#fff
+    classDef amber fill:#F39C12,stroke:#D68910,color:#fff
+    classDef red fill:#E74C3C,stroke:#CB4335,color:#fff
+    classDef process fill:#3498DB,stroke:#2980B9,color:#fff
+    classDef decision fill:#8E44AD,stroke:#7D3C98,color:#fff
+    classDef ref fill:#ECF0F1,stroke:#BDC3C7,color:#2C3E50
+
+    class Green,GreenLabel green
+    class Amber,AmberMonitor,AmberNotify amber
+    class Red,RedBlock,RedOverride red
+    class Input,QueryUsage,EstimateLoad,Project,Headroom,Aggregate,Recommend,Persist process
+    class ThresholdCheck,ForEachSignal decision
+    class MetricsRef,LogsRef,TracesRef,ProfilesRef ref

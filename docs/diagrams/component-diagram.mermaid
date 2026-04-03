@@ -1,0 +1,117 @@
+%% C4 Level 3 — Component Diagram (Backend API)
+%% Next-Gen Observability Onboarding Platform
+
+graph TB
+    Frontend["<b>Frontend SPA</b>"]
+
+    subgraph backend ["Backend API Container"]
+        direction TB
+
+        %% ── API Layer (FastAPI Routers) ─────────────────────
+        subgraph api ["API Layer — FastAPI Routers"]
+            direction LR
+            HealthRouter["<b>Health Router</b><br/>/health, /ready"]
+            OnboardingRouter["<b>Onboarding Router</b><br/>CRUD for onboarding<br/>requests"]
+            CapacityRouter["<b>Capacity Router</b><br/>/check, /status"]
+            SimilarityRouter["<b>Similarity Router</b><br/>/search"]
+            ArtifactRouter["<b>Artifact Router</b><br/>/generate, /preview,<br/>/{id}"]
+            GovernanceRouter["<b>Governance Router</b><br/>/validate, /rules"]
+            LookupRouter["<b>Lookup Router</b><br/>/portfolios,<br/>/tech-stacks,<br/>/platforms"]
+        end
+
+        %% ── Service Layer ───────────────────────────────────
+        subgraph services ["Service Layer"]
+            direction LR
+            OnboardingSvc["<b>Onboarding Service</b><br/>Orchestrates wizard flow,<br/>status transitions"]
+            CapacitySvc["<b>Capacity Service</b><br/>Delegates to capacity<br/>engine, persists results"]
+            SimilaritySvc["<b>Similarity Service</b><br/>Vector search via<br/>pgvector, ranks matches"]
+            ArtifactSvc["<b>Artifact Service</b><br/>Generates CR/Epic/Story<br/>payloads via Jinja2"]
+            GovernanceSvc["<b>Governance Service</b><br/>Runs rule engine,<br/>aggregates violations"]
+            LookupSvc["<b>Lookup Service</b><br/>Cached reference<br/>data queries"]
+        end
+
+        %% ── Engine Layer ────────────────────────────────────
+        subgraph engine ["Engine Layer — Pure Domain Logic"]
+            direction LR
+            CapacityEngine["<b>Capacity Engine</b><br/>Per-signal checks,<br/>thresholds,<br/>projections"]
+            GovernanceEngine["<b>Governance Engine</b><br/>Rule registry,<br/>evaluation loop,<br/>scoring"]
+            RuleRegistry["<b>Rule Registry</b><br/>HARD rules (GOV-001..007)<br/>SOFT rules (GOV-101..105)"]
+        end
+
+        %% ── Repository Layer ────────────────────────────────
+        subgraph repos ["Repository Layer — Data Access"]
+            direction LR
+            OnboardingRepo["<b>Onboarding Repo</b>"]
+            CapacityRepo["<b>Capacity Repo</b>"]
+            SimilarityRepo["<b>Similarity Repo</b>"]
+            ArtifactRepo["<b>Artifact Repo</b>"]
+            AuditRepo["<b>Audit Repo</b>"]
+            AppMetadataRepo["<b>AppMetadata Repo</b>"]
+        end
+
+        %% ── MCP Client Layer ────────────────────────────────
+        subgraph mcp ["MCP Client Layer"]
+            direction LR
+            GrafanaClient["<b>Grafana MCP Client</b><br/>Usage queries,<br/>datasource provisioning"]
+            ConfluenceClient["<b>Confluence MCP Client</b><br/>Runbook page creation"]
+            JiraClient["<b>Jira MCP Client</b><br/>Epic / Story / Task<br/>creation"]
+            ServiceNowClient["<b>ServiceNow MCP Client</b><br/>CTASK creation,<br/>CMDB sync"]
+        end
+    end
+
+    %% ── Database ────────────────────────────────────────────
+    DB[("PostgreSQL 16<br/>+ pgvector")]
+
+    %% ── External MCP Servers ────────────────────────────────
+    ExtGrafana["Grafana MCP Server"]
+    ExtConfluence["Confluence MCP Server"]
+    ExtJira["Jira MCP Server"]
+    ExtServiceNow["ServiceNow MCP Server"]
+
+    %% ── Relationships ───────────────────────────────────────
+    Frontend -->|"REST/JSON"| api
+
+    OnboardingRouter --> OnboardingSvc
+    CapacityRouter --> CapacitySvc
+    SimilarityRouter --> SimilaritySvc
+    ArtifactRouter --> ArtifactSvc
+    GovernanceRouter --> GovernanceSvc
+    LookupRouter --> LookupSvc
+
+    OnboardingSvc --> OnboardingRepo
+    OnboardingSvc --> AuditRepo
+    CapacitySvc --> CapacityEngine
+    CapacitySvc --> CapacityRepo
+    CapacitySvc --> GrafanaClient
+    SimilaritySvc --> SimilarityRepo
+    ArtifactSvc --> ArtifactRepo
+    ArtifactSvc --> JiraClient
+    ArtifactSvc --> ConfluenceClient
+    ArtifactSvc --> ServiceNowClient
+    GovernanceSvc --> GovernanceEngine
+    GovernanceEngine --> RuleRegistry
+    LookupSvc --> AppMetadataRepo
+
+    repos -->|"SQLAlchemy 2.0<br/>asyncpg"| DB
+
+    GrafanaClient -->|"HTTP/JSON"| ExtGrafana
+    ConfluenceClient -->|"HTTP/JSON"| ExtConfluence
+    JiraClient -->|"HTTP/JSON"| ExtJira
+    ServiceNowClient -->|"HTTP/JSON"| ExtServiceNow
+
+    %% ── Styling ─────────────────────────────────────────────
+    classDef router fill:#438DD5,stroke:#3C7FC0,color:#fff
+    classDef service fill:#85BBF0,stroke:#78A8D8,color:#000
+    classDef engineComp fill:#F5A623,stroke:#D89520,color:#000
+    classDef repo fill:#7BC67E,stroke:#63A866,color:#000
+    classDef mcpClient fill:#E06C75,stroke:#C85A63,color:#fff
+    classDef external fill:#999,stroke:#6B6B6B,color:#fff
+    classDef db fill:#438DD5,stroke:#3C7FC0,color:#fff
+
+    class HealthRouter,OnboardingRouter,CapacityRouter,SimilarityRouter,ArtifactRouter,GovernanceRouter,LookupRouter router
+    class OnboardingSvc,CapacitySvc,SimilaritySvc,ArtifactSvc,GovernanceSvc,LookupSvc service
+    class CapacityEngine,GovernanceEngine,RuleRegistry engineComp
+    class OnboardingRepo,CapacityRepo,SimilarityRepo,ArtifactRepo,AuditRepo,AppMetadataRepo repo
+    class GrafanaClient,ConfluenceClient,JiraClient,ServiceNowClient mcpClient
+    class ExtGrafana,ExtConfluence,ExtJira,ExtServiceNow external
+    class DB db
