@@ -15,6 +15,8 @@ const CapacityDashboard = lazy(
 );
 const AdminPanel = lazy(() => import('@/features/admin/AdminPanel'));
 const ServiceCatalog = lazy(() => import('@/features/catalog/ServiceCatalog'));
+const PortfolioList = lazy(() => import('@/features/portfolios/PortfolioList'));
+const PortfolioDetail = lazy(() => import('@/features/portfolios/PortfolioDetail'));
 
 /* -------------------------------------------------------------------------- */
 /*  Loading fallback                                                          */
@@ -49,6 +51,10 @@ export default function App() {
 
           {/* Observability catalog */}
           <Route path="/catalog" element={<ServiceCatalog />} />
+
+          {/* Retail portfolios */}
+          <Route path="/portfolios" element={<PortfolioList />} />
+          <Route path="/portfolios/:id" element={<PortfolioDetail />} />
 
           {/* Capacity planning */}
           <Route path="/capacity" element={<CapacityDashboard />} />
