@@ -7,6 +7,7 @@ import {
   Menu,
   X,
   Activity,
+  Grid3X3,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
@@ -36,6 +37,11 @@ const navItems: NavItem[] = [
     to: '/',
     label: 'Dashboard',
     icon: <LayoutDashboard className="h-5 w-5" />,
+  },
+  {
+    to: '/catalog',
+    label: 'O11y Catalog',
+    icon: <Grid3X3 className="h-5 w-5" />,
   },
   {
     to: '/onboarding/new',
