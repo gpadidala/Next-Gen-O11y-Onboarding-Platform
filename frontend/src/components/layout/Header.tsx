@@ -1,5 +1,6 @@
 import { Bell, Menu, User } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 
 /* -------------------------------------------------------------------------- */
 /*  Types                                                                     */
@@ -46,6 +47,9 @@ function Header({ onMenuToggle, className }: HeaderProps) {
 
       {/* Right side */}
       <div className="flex items-center gap-2">
+        {/* Theme toggle */}
+        <ThemeToggle />
+
         {/* Notification bell */}
         <button
           type="button"

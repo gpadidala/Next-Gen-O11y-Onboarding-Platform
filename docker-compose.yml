@@ -45,8 +45,6 @@ services:
       - "3000:3000"
     depends_on:
       - backend
-    volumes:
-      - ./frontend/src:/app/src
 
 volumes:
   pgdata:

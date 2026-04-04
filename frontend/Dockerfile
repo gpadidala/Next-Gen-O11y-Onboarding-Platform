@@ -3,11 +3,10 @@ FROM node:20-alpine AS dev
 
 WORKDIR /app
 
-# Install dependencies first for better layer caching
 COPY package.json package-lock.json* ./
 RUN npm install
 
-# Copy source code
+# Copy all source — rebuild image when src changes
 COPY . .
 
 EXPOSE 3000
