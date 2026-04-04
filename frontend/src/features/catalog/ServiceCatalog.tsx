@@ -10,6 +10,7 @@ type Signal = 'M' | 'L' | 'T' | 'P' | 'R' | 'E';
 type Status = 'GA' | 'Beta' | 'Coming Soon';
 type CategoryKey =
   | 'app'
+  | 'infra-aws'
   | 'infra-azure'
   | 'infra-gcp'
   | 'infra-k8s'
@@ -61,7 +62,7 @@ const STATUS_META: Record<Status, { bg: string; text: string }> = {
 };
 
 /* ============================================================================
-   CATALOG DATA  —  87 integrations across 11 categories
+   CATALOG DATA  —  97+ integrations across 12 categories
    ============================================================================ */
 
 const CATALOG: CatalogSection[] = [
@@ -254,7 +255,96 @@ const CATALOG: CatalogSection[] = [
     ],
   },
 
-  /* ── 3. INFRASTRUCTURE — GCP ──────────────────────────────────────────── */
+  /* ── 3. INFRASTRUCTURE — AWS ──────────────────────────────────────────── */
+  {
+    id: 'infra-aws',
+    label: 'AWS Infrastructure',
+    shortLabel: 'AWS',
+    accent: '#FF9900',
+    iconComponent: <Globe className="h-5 w-5" />,
+    services: [
+      {
+        key: 'aws-eks-telemetry',
+        name: 'Amazon EKS Cluster Telemetry',
+        description: 'OTEL Collector DaemonSet on EKS. kube-state-metrics + cadvisor + node-exporter. Pod/node metrics → Mimir, container logs → Loki, traces → Tempo.',
+        signals: ['M', 'L', 'T'],
+        status: 'GA', icon: '☸️',
+        dashboardId: '15760',
+      },
+      {
+        key: 'aws-cloudwatch-exporter',
+        name: 'AWS CloudWatch Exporter',
+        description: 'yet-another-cloudwatch-exporter (YACE) scrapes EC2, RDS, ALB, Lambda, S3, SQS, SNS, ElastiCache metrics into Mimir. Supports custom namespaces.',
+        signals: ['M'],
+        status: 'GA', icon: '📊',
+        grafanaPlugin: true,
+        dashboardId: '139',
+      },
+      {
+        key: 'aws-ec2-asg',
+        name: 'Amazon EC2 / Auto Scaling',
+        description: 'Node Exporter on EC2 via Systems Manager or user-data. CPU, memory, disk, network. ASG scale-in/out events to Loki. Prometheus scrape via service discovery.',
+        signals: ['M', 'L'],
+        status: 'GA', icon: '🖥️',
+        dashboardId: '1860',
+      },
+      {
+        key: 'aws-lambda',
+        name: 'AWS Lambda (Serverless)',
+        description: 'Lambda Extension + OTEL SDK. Cold start duration, init/invoke duration, concurrent executions, throttles, errors. Structured logs → Loki via CloudWatch subscription filter.',
+        signals: ['M', 'L', 'T'],
+        status: 'GA', icon: '⚡',
+        dashboardId: '19842',
+      },
+      {
+        key: 'aws-rds-aurora',
+        name: 'Amazon RDS / Aurora',
+        description: 'Enhanced Monitoring + Performance Insights via YACE CloudWatch exporter. Query latency, connections, IOPS, replication lag. Slow query logs → Loki.',
+        signals: ['M', 'L'],
+        status: 'GA', icon: '🐘',
+        dashboardId: '707',
+      },
+      {
+        key: 'aws-elasticache',
+        name: 'Amazon ElastiCache (Redis/Memcached)',
+        description: 'YACE CloudWatch exporter for cache hit/miss ratio, memory fragmentation, evictions, connections, replication lag. redis-exporter as sidecar option.',
+        signals: ['M'],
+        status: 'GA', icon: '⚡',
+        dashboardId: '11835',
+      },
+      {
+        key: 'aws-msk',
+        name: 'Amazon MSK (Managed Kafka)',
+        description: 'MSK Prometheus metrics endpoint + OTEL Collector. Topic lag, broker I/O, under-replicated partitions, consumer group offsets. Broker logs → Loki via CloudWatch.',
+        signals: ['M', 'L'],
+        status: 'GA', icon: '🔄',
+        dashboardId: '7589',
+      },
+      {
+        key: 'aws-alb-nlb',
+        name: 'AWS ALB / NLB / CloudFront',
+        description: 'YACE CloudWatch exporter for ALB: request count, latency, 4xx/5xx, healthy host count. NLB TCP flows. CloudFront cache metrics, error rates.',
+        signals: ['M', 'L'],
+        status: 'GA', icon: '🔀',
+      },
+      {
+        key: 'aws-sqs-sns',
+        name: 'Amazon SQS / SNS',
+        description: 'YACE CloudWatch: SQS queue depth, oldest message age, DLQ depth, message throughput. SNS delivery success/failure, publish count.',
+        signals: ['M'],
+        status: 'GA', icon: '📨',
+      },
+      {
+        key: 'aws-cloudtrail-guardduty',
+        name: 'AWS CloudTrail / GuardDuty',
+        description: 'CloudTrail S3 → Fluent Bit → Loki for audit logs. GuardDuty findings via EventBridge → Lambda → Loki. Security events, API call audit, IAM activity.',
+        signals: ['L', 'E'],
+        status: 'GA', icon: '🔐',
+      },
+    ],
+  },
+
+  /* ── 5. INFRASTRUCTURE — GCP ──────────────────────────────────────────── */
   {
     id: 'infra-gcp',
     label: 'GCP Infrastructure',
@@ -315,7 +405,7 @@ const CATALOG: CatalogSection[] = [
     ],
   },
 
-  /* ── 4. KUBERNETES & CONTAINERS ───────────────────────────────────────── */
+  /* ── 6. KUBERNETES & CONTAINERS ───────────────────────────────────────── */
   {
     id: 'infra-k8s',
     label: 'Kubernetes & Containers',
@@ -1006,6 +1096,7 @@ function ServiceCardItem({ service }: { service: ServiceCard }) {
 const ALL_FILTERS: Array<{ id: CategoryKey | 'all'; label: string }> = [
   { id: 'all',        label: 'All' },
   { id: 'app',        label: 'Application' },
+  { id: 'infra-aws',  label: 'AWS' },
   { id: 'infra-azure', label: 'Azure' },
   { id: 'infra-gcp',  label: 'GCP' },
   { id: 'infra-k8s',  label: 'K8s & Containers' },
@@ -1064,7 +1155,7 @@ export default function ServiceCatalog() {
             O11y Integration Catalog
           </h1>
           <p className="mt-2 max-w-2xl text-base text-white/70">
-            15+ years of enterprise observability patterns. Every integration pre-configured for your LGTM stack.
+            Every integration pre-configured for your LGTM stack.
             Pick an integration and onboard in minutes — not weeks.
           </p>
           {/* Stats */}
@@ -1072,8 +1163,8 @@ export default function ServiceCatalog() {
             {[
               { n: `${totalServices}`, l: 'Integrations' },
               { n: '6',  l: 'Signal Types' },
-              { n: '11', l: 'Categories' },
-              { n: '15+', l: 'Years of Patterns' },
+              { n: '12', l: 'Categories' },
+              { n: '4',  l: 'Cloud Providers' },
             ].map(s => (
               <div key={s.l}>
                 <span className="text-2xl font-bold text-white">{s.n}</span>
