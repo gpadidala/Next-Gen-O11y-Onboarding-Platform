@@ -1220,73 +1220,38 @@ export default function OnboardingWizard() {
 
     try {
       if (currentStep === 1) {
-        // Create onboarding on step 1 next
-        const payload = {
-          appName: form.app_name,
-          portfolio: form.portfolio,
-          appCode: form.app_code,
-          description: form.notes || `Onboarding for ${form.app_name}`,
-          hostingPlatform: 'AKS' as const,
-          techStack: 'JAVA_SPRING' as const,
-          runtimeVersion: '',
-          telemetrySignals: [] as ('METRICS' | 'LOGS' | 'TRACES' | 'PROFILING' | 'RUM' | 'SYNTHETICS')[],
-          technicalConfig: {
-            samplingRate: form.sampling_rate,
-            retentionDays: 30,
-            customLabels: {},
-            autoInstrumentation: true,
-          },
-          alertOwnerEmail: form.alert_owner_email,
-          alertOwnerTeam: form.alert_owner_team,
-          escalationPolicy: '',
-          oncallSchedule: '',
-          environmentReadiness: {
-            DEV: { enabled: form.environments.includes('DEV') },
-            QA: { enabled: form.environments.includes('QA') },
-            STAGING: { enabled: false },
-            PROD: { enabled: true },
-          },
-          dependencies: {
-            upstream: [],
-            downstream: [],
-            databases: [],
-            messageQueues: [],
-          },
-          dataClassification: 'internal',
-          complianceNotes: form.notes,
-          createdBy: form.created_by,
-        };
-        const response = await createOnboarding(payload);
+        // Step 1: validation only — advance without API call (platform/stack not yet known)
         setState((prev) => ({
           ...prev,
-          onboardingId: response.id,
           currentStep: 2,
           submitting: false,
         }));
-      } else if (currentStep === 2 || currentStep === 3 || currentStep === 4) {
-        // Best-effort update for steps 2-4
+      } else if (currentStep === 2) {
+        // Step 2: all required backend fields are now available — create the record
+        const created = await createOnboarding({
+          app_name: form.app_name,
+          app_code: form.app_code,
+          portfolio: form.portfolio,
+          hosting_platform: form.hosting_platform,
+          tech_stack: form.tech_stack,
+          alert_owner_email: form.alert_owner_email,
+          alert_owner_team: form.alert_owner_team,
+          created_by: form.created_by,
+          notes: form.notes || null,
+        });
+        setState((prev) => ({
+          ...prev,
+          onboardingId: created.id,
+          currentStep: 3,
+          submitting: false,
+        }));
+      } else if (currentStep === 3 || currentStep === 4) {
+        // Best-effort update for steps 3-4
         if (onboardingId) {
-          const signalMap: Record<string, 'METRICS' | 'LOGS' | 'TRACES' | 'PROFILING' | 'RUM' | 'SYNTHETICS'> = {
-            metrics: 'METRICS',
-            logs: 'LOGS',
-            traces: 'TRACES',
-            profiles: 'PROFILING',
-            rum: 'RUM',
-          };
-          const mappedSignals = form.signals
-            .map((s) => signalMap[s])
-            .filter((s): s is 'METRICS' | 'LOGS' | 'TRACES' | 'PROFILING' | 'RUM' | 'SYNTHETICS' => Boolean(s));
-
           await updateOnboarding(onboardingId, {
-            appName: form.app_name,
-            appCode: form.app_code,
-            telemetrySignals: mappedSignals,
-            technicalConfig: {
-              samplingRate: form.sampling_rate,
-              retentionDays: 30,
-              customLabels: {},
-              autoInstrumentation: true,
-            },
+            app_name: form.app_name,
+            hosting_platform: form.hosting_platform,
+            tech_stack: form.tech_stack,
           }).catch(() => {
             // Best-effort — don't block navigation on update error
           });
@@ -1298,8 +1263,18 @@ export default function OnboardingWizard() {
         }));
       }
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'An unexpected error occurred.';
+      // Handle both Error instances and API error objects from the Axios interceptor
+      let message = 'An unexpected error occurred.';
+      if (err instanceof Error) {
+        message = err.message;
+      } else if (err && typeof err === 'object') {
+        const apiErr = err as Record<string, unknown>;
+        if (typeof apiErr.detail === 'string') {
+          message = apiErr.detail;
+        } else if (typeof apiErr.title === 'string') {
+          message = apiErr.title;
+        }
+      }
       setState((prev) => ({
         ...prev,
         submitting: false,
@@ -1329,8 +1304,14 @@ export default function OnboardingWizard() {
       await submitOnboarding(state.onboardingId);
       setState((prev) => ({ ...prev, submitting: false, submitted: true }));
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to submit onboarding.';
+      let message = 'Failed to submit onboarding.';
+      if (err instanceof Error) {
+        message = err.message;
+      } else if (err && typeof err === 'object') {
+        const apiErr = err as Record<string, unknown>;
+        if (typeof apiErr.detail === 'string') message = apiErr.detail;
+        else if (typeof apiErr.title === 'string') message = apiErr.title;
+      }
       setState((prev) => ({ ...prev, submitting: false, error: message }));
     }
   }

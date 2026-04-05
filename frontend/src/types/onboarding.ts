@@ -140,28 +140,28 @@ export interface OnboardingFormData {
 
 /* ---- API request / response shapes ---- */
 
+/** Matches the backend OnboardingCreate Pydantic schema (snake_case). */
 export interface OnboardingCreate {
-  appName: string;
+  app_name: string;
+  app_code: string;
   portfolio: string;
-  appCode: string;
-  description: string;
-  hostingPlatform: HostingPlatform;
-  techStack: TechStack;
-  runtimeVersion: string;
-  telemetrySignals: TelemetrySignal[];
-  technicalConfig: TechnicalConfig;
-  alertOwnerEmail: string;
-  alertOwnerTeam: string;
-  escalationPolicy: string;
-  oncallSchedule: string;
-  environmentReadiness: EnvironmentReadiness;
-  dependencies: Dependencies;
-  dataClassification: string;
-  complianceNotes: string;
+  hosting_platform: string;
+  tech_stack: string;
+  alert_owner_email: string;
+  alert_owner_team: string;
+  created_by: string;
+  notes?: string | null;
 }
 
-export interface OnboardingUpdate extends Partial<OnboardingCreate> {
-  /** Only fields that changed need to be sent. */
+/** Matches the backend OnboardingUpdate Pydantic schema (snake_case, all optional). */
+export interface OnboardingUpdate {
+  app_name?: string;
+  portfolio?: string;
+  hosting_platform?: string;
+  tech_stack?: string;
+  alert_owner_email?: string;
+  alert_owner_team?: string;
+  notes?: string | null;
 }
 
 export interface OnboardingResponse {

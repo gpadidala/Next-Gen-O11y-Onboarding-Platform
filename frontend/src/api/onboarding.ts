@@ -19,7 +19,7 @@ export async function createOnboarding(
   data: OnboardingCreate,
 ): Promise<OnboardingResponse> {
   const response = await apiClient.post<ApiResponse<OnboardingResponse>>(
-    '/onboardings',
+    '/onboardings/',
     data,
   );
   return response.data.data;
