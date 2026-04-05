@@ -1263,22 +1263,30 @@ export default function OnboardingWizard() {
         }));
       }
     } catch (err: unknown) {
-      // Handle both Error instances and API error objects from the Axios interceptor
       let message = 'An unexpected error occurred.';
+      let goToStep: number | null = null;
+
       if (err instanceof Error) {
         message = err.message;
       } else if (err && typeof err === 'object') {
         const apiErr = err as Record<string, unknown>;
-        if (typeof apiErr.detail === 'string') {
-          message = apiErr.detail;
-        } else if (typeof apiErr.title === 'string') {
-          message = apiErr.title;
+        const detail = typeof apiErr.detail === 'string' ? apiErr.detail : null;
+        const title  = typeof apiErr.title  === 'string' ? apiErr.title  : null;
+
+        if (apiErr.status === 409) {
+          // Duplicate app_code — send user back to Step 1 to change it
+          message = detail ?? `App code '${form.app_code}' is already in use. Please enter a different App Code.`;
+          goToStep = 1;
+        } else {
+          message = detail ?? title ?? message;
         }
       }
+
       setState((prev) => ({
         ...prev,
         submitting: false,
         error: message,
+        currentStep: goToStep ?? prev.currentStep,
       }));
     }
   }

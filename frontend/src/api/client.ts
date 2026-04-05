@@ -66,48 +66,59 @@ apiClient.interceptors.response.use(
 
     const { status, data } = error.response;
 
+    // FastAPI wraps RFC 7807 errors as { detail: { type, title, status, detail, error_code } }
+    // Unwrap the nested object so consumers always get a flat ApiError.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw = data as any;
+    const nested = raw?.detail && typeof raw.detail === 'object' ? raw.detail : null;
+    const resolvedTitle  = nested?.title  ?? raw?.title  ?? 'Server Error';
+    const resolvedDetail = nested?.detail ?? (typeof raw?.detail === 'string' ? raw.detail : null)
+      ?? 'An unexpected error occurred. Please try again later.';
+    const resolvedType   = nested?.type   ?? raw?.type   ?? 'about:blank';
+
     switch (status) {
       case 401: {
-        // Clear stale token and redirect to login
         localStorage.removeItem(AUTH_TOKEN_KEY);
         if (window.location.pathname !== LOGIN_PATH) {
           window.location.href = LOGIN_PATH;
         }
-        const authError: ApiError = {
-          type: data?.type ?? 'about:blank',
+        return Promise.reject({
+          type: resolvedType,
           title: 'Unauthorized',
           status: 401,
-          detail:
-            data?.detail ?? 'Your session has expired. Please log in again.',
-        };
-        return Promise.reject(authError);
+          detail: resolvedDetail !== 'An unexpected error occurred. Please try again later.'
+            ? resolvedDetail
+            : 'Your session has expired. Please log in again.',
+        } as ApiError);
       }
 
       case 422: {
-        // Validation errors - parse field-level details
-        const validationError: ApiError = {
-          type: data?.type ?? 'about:blank',
-          title: data?.title ?? 'Validation Error',
+        // Pydantic validation: detail is an array of { loc, msg, type }
+        let detail422 = 'One or more fields failed validation.';
+        if (Array.isArray(raw?.detail)) {
+          detail422 = raw.detail.map((e: { msg: string; loc?: string[] }) =>
+            e.loc ? `${e.loc.slice(1).join('.')}: ${e.msg}` : e.msg,
+          ).join('; ');
+        } else {
+          detail422 = resolvedDetail;
+        }
+        return Promise.reject({
+          type: resolvedType,
+          title: 'Validation Error',
           status: 422,
-          detail:
-            data?.detail ?? 'One or more fields failed validation.',
-          errors: data?.errors ?? {},
-        };
-        return Promise.reject(validationError);
+          detail: detail422,
+          errors: raw?.errors ?? {},
+        } as ApiError);
       }
 
       default: {
-        // All other errors (400, 403, 404, 500, etc.)
-        const genericError: ApiError = {
-          type: data?.type ?? 'about:blank',
-          title: data?.title ?? 'Server Error',
+        return Promise.reject({
+          type: resolvedType,
+          title: resolvedTitle,
           status,
-          detail:
-            data?.detail ??
-            'An unexpected error occurred. Please try again later.',
-          errors: data?.errors,
-        };
-        return Promise.reject(genericError);
+          detail: resolvedDetail,
+          errors: raw?.errors,
+        } as ApiError);
       }
     }
   },
