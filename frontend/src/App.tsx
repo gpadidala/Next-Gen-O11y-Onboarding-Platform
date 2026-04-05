@@ -15,6 +15,7 @@ const CapacityDashboard = lazy(
 );
 const AdminPanel = lazy(() => import('@/features/admin/AdminPanel'));
 const ServiceCatalog = lazy(() => import('@/features/catalog/ServiceCatalog'));
+const OnboardingDetail = lazy(() => import('@/features/onboarding/OnboardingDetail'));
 const PortfolioList = lazy(() => import('@/features/portfolios/PortfolioList'));
 const PortfolioDetail = lazy(() => import('@/features/portfolios/PortfolioDetail'));
 
@@ -45,9 +46,11 @@ export default function App() {
           {/* Dashboard */}
           <Route path="/" element={<Dashboard />} />
 
-          {/* Onboarding wizard - new and edit */}
+          {/* Onboarding wizard — new requests only */}
           <Route path="/onboarding/new" element={<OnboardingWizard />} />
-          <Route path="/onboarding/:id" element={<OnboardingWizard />} />
+
+          {/* Onboarding detail — view history/status of an existing request */}
+          <Route path="/onboarding/:id" element={<OnboardingDetail />} />
 
           {/* Observability catalog */}
           <Route path="/catalog" element={<ServiceCatalog />} />
