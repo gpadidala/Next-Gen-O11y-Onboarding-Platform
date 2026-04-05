@@ -2,8 +2,7 @@ import { type FC, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, Trash2, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
-import { listOnboardings } from '@/api/onboarding';
-import type { OnboardingResponse } from '@/types/onboarding';
+import { listOnboardings, type BackendOnboardingResponse } from '@/api/onboarding';
 
 const statusVariant: Record<string, 'success' | 'warning' | 'error' | 'info' | 'neutral'> = {
   draft: 'neutral',
@@ -26,7 +25,7 @@ interface OnboardingListProps {
 
 export const OnboardingList: FC<OnboardingListProps> = ({ statusFilter }) => {
   const navigate = useNavigate();
-  const [items, setItems] = useState<OnboardingResponse[]>([]);
+  const [items, setItems] = useState<BackendOnboardingResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
 

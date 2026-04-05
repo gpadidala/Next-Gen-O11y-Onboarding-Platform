@@ -6,23 +6,52 @@ import apiClient from './client';
 import type {
   OnboardingCreate,
   OnboardingUpdate,
-  OnboardingResponse,
   OnboardingListParams,
-  OnboardingListResponse,
 } from '@/types/onboarding';
-import type { ApiResponse } from '@/types/api';
+
+// Backend returns objects flat (no { data: ... } wrapper) — use 'any' shaped responses
+// and extract fields directly from response.data.
+
+export interface BackendOnboardingResponse {
+  id: string;
+  app_name: string;
+  app_code: string;
+  portfolio: string;
+  hosting_platform: string;
+  tech_stack: string;
+  status: string;
+  alert_owner_email: string;
+  alert_owner_team: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  submitted_at: string | null;
+  notes?: string | null;
+  success?: boolean;
+  message?: string;
+}
+
+export interface BackendListResponse {
+  items: BackendOnboardingResponse[];
+  pagination: {
+    total: number;
+    page: number;
+    page_size: number;
+    total_pages: number;
+  };
+}
 
 /**
  * Create a new onboarding request.
  */
 export async function createOnboarding(
   data: OnboardingCreate,
-): Promise<OnboardingResponse> {
-  const response = await apiClient.post<ApiResponse<OnboardingResponse>>(
+): Promise<BackendOnboardingResponse> {
+  const response = await apiClient.post<BackendOnboardingResponse>(
     '/onboardings/',
     data,
   );
-  return response.data.data;
+  return response.data;
 }
 
 /**
@@ -30,11 +59,11 @@ export async function createOnboarding(
  */
 export async function getOnboarding(
   id: string,
-): Promise<OnboardingResponse> {
-  const response = await apiClient.get<ApiResponse<OnboardingResponse>>(
-    `/onboardings/${id}`,
+): Promise<BackendOnboardingResponse> {
+  const response = await apiClient.get<BackendOnboardingResponse>(
+    `/onboardings/${id}/`,
   );
-  return response.data.data;
+  return response.data;
 }
 
 /**
@@ -42,9 +71,9 @@ export async function getOnboarding(
  */
 export async function listOnboardings(
   params?: OnboardingListParams,
-): Promise<OnboardingListResponse> {
-  const response = await apiClient.get<OnboardingListResponse>(
-    '/onboardings',
+): Promise<BackendListResponse> {
+  const response = await apiClient.get<BackendListResponse>(
+    '/onboardings/',
     { params },
   );
   return response.data;
@@ -56,12 +85,12 @@ export async function listOnboardings(
 export async function updateOnboarding(
   id: string,
   data: OnboardingUpdate,
-): Promise<OnboardingResponse> {
-  const response = await apiClient.put<ApiResponse<OnboardingResponse>>(
-    `/onboardings/${id}`,
+): Promise<BackendOnboardingResponse> {
+  const response = await apiClient.put<BackendOnboardingResponse>(
+    `/onboardings/${id}/`,
     data,
   );
-  return response.data.data;
+  return response.data;
 }
 
 /**
@@ -69,16 +98,16 @@ export async function updateOnboarding(
  */
 export async function submitOnboarding(
   id: string,
-): Promise<OnboardingResponse> {
-  const response = await apiClient.post<ApiResponse<OnboardingResponse>>(
-    `/onboardings/${id}/submit`,
+): Promise<BackendOnboardingResponse> {
+  const response = await apiClient.post<BackendOnboardingResponse>(
+    `/onboardings/${id}/submit/`,
   );
-  return response.data.data;
+  return response.data;
 }
 
 /**
  * Delete (cancel) an onboarding.
  */
 export async function deleteOnboarding(id: string): Promise<void> {
-  await apiClient.delete(`/onboardings/${id}`);
+  await apiClient.delete(`/onboardings/${id}/`);
 }
