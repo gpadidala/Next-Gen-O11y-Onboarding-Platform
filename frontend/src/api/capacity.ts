@@ -10,6 +10,41 @@ import type {
 } from '@/types/capacity';
 import type { ApiResponse } from '@/types/api';
 
+export interface ComponentMetric {
+  name: string;
+  display_name: string;
+  unit: string;
+  current: number;
+  min: number;
+  max: number;
+  avg: number;
+  limit: number | null;
+  utilization_pct: number | null;
+  status: 'green' | 'amber' | 'red' | 'unknown';
+}
+
+export interface ComponentStack {
+  component: string;
+  display_name: string;
+  source: 'mock' | 'live';
+  base_url: string;
+  use_mock: boolean;
+  is_reachable: boolean;
+  error: string | null;
+  collected_at: string;
+  metrics: ComponentMetric[];
+}
+
+export interface CapacityStackResponse {
+  collected_at: string;
+  components: ComponentStack[];
+}
+
+export async function getCapacityStack(): Promise<CapacityStackResponse> {
+  const r = await apiClient.get<CapacityStackResponse>('/capacity/stack');
+  return r.data;
+}
+
 /**
  * Run a capacity check for a proposed onboarding.
  */

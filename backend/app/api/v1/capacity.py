@@ -19,7 +19,9 @@ from app.schemas.capacity import (
     CapacityCheckResponse,
     SignalCapacity,
 )
+from app.schemas.capacity_stack import CapacityStackResponse
 from app.schemas.common import CapacityStatus, ErrorResponse, TelemetrySignal
+from app.services.capacity_stack_service import build_capacity_stack
 from app.utils.metrics import CAPACITY_CHECKS
 
 logger: structlog.stdlib.BoundLogger = structlog.get_logger(__name__)
@@ -160,3 +162,20 @@ async def get_capacity_status(
         signals=signals,
         last_refreshed=datetime.now(tz=timezone.utc),
     )
+
+
+@router.get(
+    "/stack",
+    response_model=CapacityStackResponse,
+    status_code=status.HTTP_200_OK,
+    operation_id="getCapacityStack",
+    summary="Live per-component LGTM stack capacity view (min/max/avg/current)",
+)
+async def get_capacity_stack(db: DbSession) -> CapacityStackResponse:
+    """Return component-level capacity metrics for Mimir, Loki, Tempo, Pyroscope.
+
+    Routes through the integration resolver, so toggling ``use_mock`` on
+    an Integrations card immediately flips the source of this response.
+    """
+    payload = await build_capacity_stack(db)
+    return CapacityStackResponse(**payload)
