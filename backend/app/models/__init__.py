@@ -5,6 +5,13 @@ from app.models.artifact import Artifact, ArtifactStatus, ArtifactType
 from app.models.audit import AuditLog
 from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 from app.models.capacity import CapacityAssessment, CapacityStatus
+from app.models.coverage import (
+    CmdbSyncRun,
+    CoverageRollupSnapshot,
+    GrafanaRbacUsage,
+    LgtmAppCoverage,
+    SyntheticUrl,
+)
 from app.models.onboarding import (
     HostingPlatform,
     OnboardingRequest,
@@ -23,11 +30,16 @@ __all__ = [
     "Base",
     "CapacityAssessment",
     "CapacityStatus",
+    "CmdbSyncRun",
+    "CoverageRollupSnapshot",
     "EnvironmentReadiness",
+    "GrafanaRbacUsage",
     "HostingPlatform",
+    "LgtmAppCoverage",
     "OnboardingRequest",
     "OnboardingStatus",
     "SimilarityMatch",
+    "SyntheticUrl",
     "TechStack",
     "TechnicalConfig",
     "TelemetryScope",

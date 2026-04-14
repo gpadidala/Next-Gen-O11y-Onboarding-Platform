@@ -18,6 +18,10 @@ const ServiceCatalog = lazy(() => import('@/features/catalog/ServiceCatalog'));
 const OnboardingDetail = lazy(() => import('@/features/onboarding/OnboardingDetail'));
 const PortfolioList = lazy(() => import('@/features/portfolios/PortfolioList'));
 const PortfolioDetail = lazy(() => import('@/features/portfolios/PortfolioDetail'));
+const CoveragePage = lazy(() => import('@/features/coverage/CoveragePage'));
+const GrafanaUsagePage = lazy(
+  () => import('@/features/grafana-usage/GrafanaUsagePage'),
+);
 
 /* -------------------------------------------------------------------------- */
 /*  Loading fallback                                                          */
@@ -58,6 +62,12 @@ export default function App() {
           {/* Retail portfolios */}
           <Route path="/portfolios" element={<PortfolioList />} />
           <Route path="/portfolios/:id" element={<PortfolioDetail />} />
+
+          {/* Coverage & Adoption (v2) */}
+          <Route path="/coverage" element={<CoveragePage />} />
+
+          {/* Grafana usage (v2) */}
+          <Route path="/grafana-usage" element={<GrafanaUsagePage />} />
 
           {/* Capacity planning */}
           <Route path="/capacity" element={<CapacityDashboard />} />

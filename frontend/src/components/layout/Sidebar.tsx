@@ -9,6 +9,8 @@ import {
   Activity,
   Grid3X3,
   Briefcase,
+  Target,
+  Users,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
@@ -40,8 +42,23 @@ const navItems: NavItem[] = [
     icon: <LayoutDashboard className="h-5 w-5" />,
   },
   {
+    to: '/onboarding/new',
+    label: 'Onboarding',
+    icon: <PlusCircle className="h-5 w-5" />,
+  },
+  {
+    to: '/coverage',
+    label: 'Coverage & Adoption',
+    icon: <Target className="h-5 w-5" />,
+  },
+  {
+    to: '/capacity',
+    label: 'Capacity',
+    icon: <Gauge className="h-5 w-5" />,
+  },
+  {
     to: '/catalog',
-    label: 'O11y Catalog',
+    label: 'Service Catalog',
     icon: <Grid3X3 className="h-5 w-5" />,
   },
   {
@@ -50,14 +67,9 @@ const navItems: NavItem[] = [
     icon: <Briefcase className="h-5 w-5" />,
   },
   {
-    to: '/onboarding/new',
-    label: 'New Onboarding',
-    icon: <PlusCircle className="h-5 w-5" />,
-  },
-  {
-    to: '/capacity',
-    label: 'Capacity',
-    icon: <Gauge className="h-5 w-5" />,
+    to: '/grafana-usage',
+    label: 'Grafana Usage',
+    icon: <Users className="h-5 w-5" />,
   },
   {
     to: '/admin',

@@ -5,6 +5,7 @@ import {
   updateOnboarding,
   submitOnboarding,
 } from '@/api/onboarding';
+import { getCmdbApp } from '@/api/coverage';
 
 /* -------------------------------------------------------------------------- */
 /*  Types                                                                      */
@@ -300,11 +301,14 @@ function Step1({
   form,
   onChange,
   errors,
+  cmdbPrefilledFields,
 }: {
   form: WizardForm;
   onChange: (field: keyof WizardForm, value: string) => void;
   errors: Record<string, string>;
+  cmdbPrefilledFields?: Set<string>;
 }) {
+  const cmdbCount = cmdbPrefilledFields?.size ?? 0;
   return (
     <div className="space-y-5">
       <div>
@@ -313,6 +317,17 @@ function Step1({
           Tell us about your application so we can configure observability correctly.
         </p>
       </div>
+
+      {cmdbCount > 0 && (
+        <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+          <div className="font-medium">Sourced from CMDB</div>
+          <div className="mt-1 text-xs">
+            {cmdbCount} field{cmdbCount > 1 ? 's' : ''} pre-filled from the
+            company CMDB for <span className="font-mono">{form.app_code}</span>.
+            All fields remain editable.
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-5 sm:grid-cols-2">
         {/* App Name */}
@@ -1127,6 +1142,10 @@ export default function OnboardingWizard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const template = searchParams.get('template');
+  const cmdbAppCodeParam = searchParams.get('app_code');
+  const [cmdbPrefilledFields, setCmdbPrefilledFields] = useState<Set<string>>(
+    new Set(),
+  );
 
   const [state, setState] = useState<WizardState>({
     form: INITIAL_FORM,
@@ -1148,6 +1167,58 @@ export default function OnboardingWizard() {
       }));
     }
   }, [template]);
+
+  // Pre-populate from CMDB when ?app_code= is set (deep-link from Coverage Gaps)
+  useEffect(() => {
+    if (!cmdbAppCodeParam) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const record = await getCmdbApp(cmdbAppCodeParam);
+        if (cancelled || !record) return;
+        const sourced = new Set<string>();
+        setState((prev) => {
+          const next = { ...prev.form };
+          if (record.app_code) {
+            next.app_code = record.app_code;
+            sourced.add('app_code');
+          }
+          if (record.app_name) {
+            next.app_name = record.app_name;
+            sourced.add('app_name');
+          }
+          if (record.portfolio) {
+            next.portfolio = record.portfolio;
+            sourced.add('portfolio');
+          }
+          if (record.owner_email) {
+            next.alert_owner_email = record.owner_email;
+            sourced.add('alert_owner_email');
+          }
+          if (record.owner_team) {
+            next.alert_owner_team = record.owner_team;
+            sourced.add('alert_owner_team');
+          }
+          if (record.hosting_platform) {
+            next.hosting_platform = record.hosting_platform;
+            sourced.add('hosting_platform');
+          }
+          if (record.tech_stack) {
+            next.tech_stack = record.tech_stack;
+            sourced.add('tech_stack');
+          }
+          return { ...prev, form: next };
+        });
+        setCmdbPrefilledFields(sourced);
+      } catch (err) {
+        // Silent fail — fields remain blank, user fills manually.
+        console.warn('CMDB pre-fill failed', err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [cmdbAppCodeParam]);
 
   /* ---- helpers ---- */
 
@@ -1365,7 +1436,12 @@ export default function OnboardingWizard() {
         )}
 
         {currentStep === 1 && (
-          <Step1 form={form} onChange={setFormField} errors={fieldErrors} />
+          <Step1
+            form={form}
+            onChange={setFormField}
+            errors={fieldErrors}
+            cmdbPrefilledFields={cmdbPrefilledFields}
+          />
         )}
         {currentStep === 2 && (
           <Step2 form={form} onChange={setFormField} errors={fieldErrors} />

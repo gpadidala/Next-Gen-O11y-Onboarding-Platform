@@ -14,6 +14,7 @@ from prometheus_client import make_asgi_app
 
 from app.api.deps import dispose_db_engine, init_db_engine
 from app.config import Settings, get_settings
+from app.jobs.scheduler import shutdown_scheduler, start_scheduler
 from app.utils.exceptions import AppException
 from app.utils.logging import configure_logging
 from app.utils.metrics import PrometheusMiddleware
@@ -40,9 +41,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         env=settings.APP_ENV,
     )
 
+    # APScheduler — CMDB sync, coverage probes, leadership rollups
+    if settings.SCHEDULER_ENABLED:
+        start_scheduler()
+
     yield
 
     # Shutdown
+    shutdown_scheduler()
     await dispose_db_engine()
     logger.info("application_shutdown")
 

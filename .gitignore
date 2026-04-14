@@ -20,7 +20,9 @@ node_modules/
 frontend/dist/
 backend/htmlcov/
 .coverage
-coverage/
+/coverage/
+/backend/coverage/
+/frontend/coverage/
 
 # Environment
 .env

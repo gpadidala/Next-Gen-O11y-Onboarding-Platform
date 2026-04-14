@@ -23,6 +23,7 @@ dependencies = [
     "python-multipart>=0.0.12",
     "email-validator>=2.2.0",
     "tenacity>=9.0.0",
+    "apscheduler>=3.10.4",
 ]
 
 [project.optional-dependencies]
