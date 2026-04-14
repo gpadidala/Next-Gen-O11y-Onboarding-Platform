@@ -14,35 +14,42 @@
 :root {
   color-scheme: light;
 
-  /* Surfaces */
-  --surface-primary:   255 255 255;
-  --surface-secondary: 248 250 252;
-  --surface-tertiary:  241 245 249;
+  /* Surfaces — "Data-Dense Dashboard" palette from UI UX Pro Max skill */
+  --surface-primary:   255 255 255;   /* card / content bg */
+  --surface-secondary: 248 250 252;   /* app background */
+  --surface-tertiary:  237 242 249;   /* muted panel */
   --surface-inverse:   15 23 42;
 
-  /* Text */
-  --text-primary:   15 23 42;      /* slate-900 */
-  --text-secondary: 71 85 105;     /* slate-600 */
-  --text-tertiary:  100 116 139;   /* slate-500 */
-  --text-muted:     148 163 184;   /* slate-400 */
+  /* Text — deep indigo foreground for authority */
+  --text-primary:   15 23 42;          /* slate-900 */
+  --text-secondary: 30 58 138;         /* indigo-900 */
+  --text-tertiary:  100 116 139;       /* slate-500 */
+  --text-muted:     148 163 184;       /* slate-400 */
   --text-inverse:   248 250 252;
 
-  /* Borders */
-  --border-color:  226 232 240;    /* slate-200 */
-  --border-strong: 203 213 225;    /* slate-300 */
+  /* Borders — soft indigo-tinted */
+  --border-color:  219 234 254;        /* blue-100 */
+  --border-strong: 191 219 254;        /* blue-200 */
 
-  /* Brand / accent */
-  --brand-50:  238 247 255;
-  --brand-100: 217 237 255;
-  --brand-200: 188 224 255;
-  --brand-300: 142 204 255;
-  --brand-400: 89 176 255;
-  --brand-500: 51 141 255;
-  --brand-600: 27 109 245;
-  --brand-700: 20 87 225;
-  --brand-800: 23 70 182;
-  --brand-900: 25 62 143;
-  --brand-accent: #1b6df5;
+  /* Brand / primary — Analytics Dashboard palette (#1E40AF indigo-blue) */
+  --brand-50:  239 246 255;   /* blue-50 */
+  --brand-100: 219 234 254;   /* blue-100 */
+  --brand-200: 191 219 254;   /* blue-200 */
+  --brand-300: 147 197 253;   /* blue-300 */
+  --brand-400: 96  165 250;   /* blue-400 */
+  --brand-500: 59  130 246;   /* blue-500 (secondary) */
+  --brand-600: 37  99  235;   /* blue-600 */
+  --brand-700: 29  78  216;   /* blue-700 */
+  --brand-800: 30  64  175;   /* blue-800 — PRIMARY from skill */
+  --brand-900: 30  58  138;   /* blue-900 */
+  --brand-accent: #1E40AF;
+
+  /* Amber accent — for highlights, CTAs, and "live" markers */
+  --accent-50:  255 251 235;   /* amber-50 */
+  --accent-100: 254 243 199;   /* amber-100 */
+  --accent-500: 245 158 11;    /* amber-500 */
+  --accent-600: 217 119 6;     /* amber-600 — ACCENT from skill */
+  --accent-700: 180 83 9;      /* amber-700 */
 
   /* Navigation */
   --nav-bg:          15 23 42;
@@ -66,13 +73,13 @@
   --pending-bg:     249 250 251;
   --pending-border: 209 213 219;
 
-  /* Shadows */
-  --shadow-card:       0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
-  --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.06);
-  --shadow-dropdown:   0 10px 25px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  /* Shadows — brand-tinted per UI UX Pro Max guidance (coloured, not grey) */
+  --shadow-card:       0 1px 3px 0 rgba(30,64,175,0.05), 0 1px 2px -1px rgba(30,64,175,0.04);
+  --shadow-card-hover: 0 10px 24px -4px rgba(30,64,175,0.12), 0 4px 8px -2px rgba(30,64,175,0.08);
+  --shadow-dropdown:   0 16px 40px -6px rgba(30,64,175,0.15), 0 6px 12px -4px rgba(30,64,175,0.08);
 
   /* Interactive */
-  --btn-ghost-hover: rgb(241 245 249);
+  --btn-ghost-hover: rgb(239 246 255);   /* blue-50 */
 
   /* Structural */
   --spacing-page-x: 1.5rem;
@@ -81,14 +88,16 @@
   --spacing-section: 2rem;
   --sidebar-width:            16rem;
   --sidebar-collapsed-width:  4rem;
-  --header-height: 3.5rem;
+  --header-height: 3.75rem;
   --duration-fast:   150ms;
   --duration-normal: 200ms;
   --duration-slow:   300ms;
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  /* Radius scale — per skill's Enterprise SaaS spec: 16px cards, 999 pills, 8 inputs */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1rem;      /* 16px — skill recommended card radius */
+  --radius-pill: 9999px;
   --z-sidebar: 40;
   --z-header:  30;
   --z-dropdown: 50;
@@ -396,18 +405,48 @@ body {
    ============================================================================ */
 @layer components {
 
-  /* Card */
+  /* Card — skill-tuned: 16px radius, brand-tinted shadow, soft blue border */
   .card {
-    border-radius: theme('borderRadius.lg');
+    border-radius: var(--radius-xl);
     border: 1px solid rgb(var(--border-color));
     background-color: rgb(var(--surface-primary));
     padding: var(--spacing-card);
     box-shadow: var(--shadow-card);
-    transition: box-shadow var(--duration-normal), background-color var(--duration-normal);
+    transition:
+      box-shadow var(--duration-normal),
+      transform var(--duration-normal),
+      background-color var(--duration-normal);
   }
   .card-hover {
     @apply card;
-    &:hover { box-shadow: var(--shadow-card-hover); }
+    &:hover {
+      box-shadow: var(--shadow-card-hover);
+      transform: translateY(-1px);
+    }
+  }
+  .card-brand {
+    @apply card;
+    border-left: 3px solid var(--brand-accent);
+  }
+
+  /* Stat card — KPI display */
+  .stat-card {
+    @apply card flex flex-col gap-1;
+    padding: 1rem 1.25rem;
+  }
+  .stat-label {
+    @apply text-2xs font-semibold uppercase tracking-wider;
+    color: rgb(var(--text-tertiary));
+  }
+  .stat-value {
+    @apply text-3xl font-bold tracking-tightest;
+    color: rgb(var(--text-primary));
+    line-height: 1.15;
+    font-feature-settings: 'tnum' 1;
+  }
+  .stat-sub {
+    @apply text-xs;
+    color: rgb(var(--text-tertiary));
   }
 
   /* Status badges */
@@ -513,15 +552,37 @@ body {
     padding: var(--spacing-page-y) var(--spacing-page-x);
   }
   .page-header {
-    @apply mb-6 flex items-center justify-between;
+    @apply mb-6 flex flex-wrap items-start justify-between gap-4;
   }
   .page-title {
-    @apply text-2xl font-semibold;
+    @apply text-3xl font-extrabold tracking-tightest;
     color: rgb(var(--text-primary));
+    line-height: 1.1;
+    letter-spacing: -0.02em;
   }
   .page-subtitle {
     @apply mt-1 text-sm;
     color: rgb(var(--text-tertiary));
+    max-width: 42rem;
+  }
+  .page-eyebrow {
+    @apply mb-1 inline-flex items-center gap-1.5 text-2xs font-bold uppercase tracking-widest;
+    color: var(--brand-accent);
+  }
+
+  /* Soft accent "chip" — matches .page-eyebrow for consistency */
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide;
+  }
+  .chip-brand {
+    @apply chip;
+    background-color: rgb(var(--brand-50));
+    color: rgb(var(--brand-800));
+  }
+  .chip-accent {
+    @apply chip;
+    background-color: rgb(var(--accent-50));
+    color: rgb(var(--accent-700));
   }
 }
 

@@ -113,10 +113,24 @@ function Sidebar({ open, onToggle }: SidebarProps) {
         {/* Logo / Brand */}
         <div className="flex h-[var(--header-height)] items-center justify-between px-5">
           <div className="flex items-center gap-2.5">
-            <Activity className="h-6 w-6 text-brand-400" aria-hidden="true" />
-            <span className="text-sm font-bold tracking-tight text-nav-text-active">
-              O11y Platform
-            </span>
+            <div
+              className="flex h-8 w-8 items-center justify-center rounded-xl text-white shadow-[0_4px_14px_-2px_rgba(30,64,175,0.55)]"
+              style={{
+                background:
+                  'linear-gradient(135deg, #1E40AF 0%, #3B82F6 60%, #60A5FA 100%)',
+              }}
+              aria-hidden="true"
+            >
+              <Activity className="h-4 w-4" strokeWidth={2.5} />
+            </div>
+            <div className="leading-tight">
+              <div className="text-sm font-extrabold tracking-tight text-nav-text-active">
+                O11y Platform
+              </div>
+              <div className="text-2xs font-medium uppercase tracking-wider text-nav-text">
+                Coverage · Adoption
+              </div>
+            </div>
           </div>
 
           {/* Close button on mobile */}
@@ -131,7 +145,10 @@ function Sidebar({ open, onToggle }: SidebarProps) {
         </div>
 
         {/* Navigation links */}
-        <nav className="mt-2 flex-1 space-y-1 px-3">
+        <nav className="mt-3 flex-1 space-y-0.5 px-3">
+          <div className="mb-2 px-3 text-2xs font-bold uppercase tracking-widest text-nav-text/70">
+            Navigate
+          </div>
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -143,10 +160,10 @@ function Sidebar({ open, onToggle }: SidebarProps) {
               }}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors duration-150',
+                  'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-200',
                   isActive
-                    ? 'bg-nav-bg-hover text-nav-text-active'
-                    : 'text-nav-text hover:bg-nav-bg-hover hover:text-nav-text-active',
+                    ? 'bg-nav-bg-hover text-nav-text-active shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]'
+                    : 'text-nav-text hover:bg-nav-bg-hover/70 hover:text-nav-text-active',
                 )
               }
             >
@@ -155,20 +172,20 @@ function Sidebar({ open, onToggle }: SidebarProps) {
                   {/* Active indicator bar */}
                   {isActive && (
                     <span
-                      className="absolute left-0 h-8 w-1 rounded-r-full bg-nav-accent"
+                      className="absolute left-0 h-7 w-[3px] rounded-r-full bg-nav-accent shadow-[0_0_12px_rgba(59,130,246,0.6)]"
                       aria-hidden="true"
                     />
                   )}
                   <span
                     className={cn(
-                      'shrink-0',
+                      'shrink-0 transition-transform duration-200 group-hover:scale-110',
                       isActive ? 'text-nav-accent' : 'text-nav-text',
                     )}
                     aria-hidden="true"
                   >
                     {item.icon}
                   </span>
-                  <span>{item.label}</span>
+                  <span className="tracking-tight">{item.label}</span>
                 </>
               )}
             </NavLink>
@@ -176,8 +193,18 @@ function Sidebar({ open, onToggle }: SidebarProps) {
         </nav>
 
         {/* Bottom section */}
-        <div className="border-t border-slate-700 p-4">
-          <p className="text-2xs text-nav-text">v1.0.0</p>
+        <div className="border-t border-slate-700/60 p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-brand-400 text-xs font-bold text-white">
+              OP
+            </div>
+            <div className="leading-tight">
+              <div className="text-xs font-semibold text-nav-text-active">
+                Platform Ops
+              </div>
+              <div className="text-2xs text-nav-text">v2.0 · live</div>
+            </div>
+          </div>
         </div>
       </aside>
 

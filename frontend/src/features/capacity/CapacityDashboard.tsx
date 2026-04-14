@@ -101,23 +101,26 @@ export default function CapacityDashboard() {
     <div className="space-y-6 p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
-            <Gauge className="h-6 w-6 text-brand-600" />
-            Capacity Planning
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Live utilisation of the configured LGTM stack. Reads via the{' '}
+          <div className="page-eyebrow">
+            <Gauge className="h-3 w-3" strokeWidth={3} />
+            LGTM utilisation
+          </div>
+          <h1 className="page-title">Capacity Planning</h1>
+          <p className="page-subtitle">
+            Live min / max / avg / current for every component in the LGTM
+            stack. Routes through the{' '}
             <Link
               to="/admin/integrations"
-              className="font-medium text-brand-700 underline"
+              className="font-semibold text-brand-700 underline decoration-brand-200 decoration-2 underline-offset-2 hover:decoration-brand-500"
             >
               Integrations
             </Link>{' '}
-            resolver — flip any component to <code>use_mock = false</code>{' '}
+            resolver — flip any component to <code className="rounded bg-brand-50 px-1.5 py-0.5 font-mono text-xs text-brand-800">use_mock = false</code>{' '}
             with a real base URL to pull real values.
           </p>
           {stack && (
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-slate-500">
+              <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
               Last refreshed {new Date(stack.collected_at).toLocaleString()}
             </p>
           )}

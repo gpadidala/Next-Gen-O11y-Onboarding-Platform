@@ -20,6 +20,14 @@ const config: Config = {
           900: 'rgb(var(--brand-900) / <alpha-value>)',
           950: 'rgb(var(--brand-900) / <alpha-value>)',
         },
+        /* Amber accent — secondary highlight colour from the Analytics Dashboard palette */
+        accent: {
+          50:  'rgb(var(--accent-50)  / <alpha-value>)',
+          100: 'rgb(var(--accent-100) / <alpha-value>)',
+          500: 'rgb(var(--accent-500) / <alpha-value>)',
+          600: 'rgb(var(--accent-600) / <alpha-value>)',
+          700: 'rgb(var(--accent-700) / <alpha-value>)',
+        },
         /* Status colors */
         status: {
           healthy:        'rgb(var(--status-healthy)        / <alpha-value>)',
@@ -79,7 +87,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: [
-          'Inter', 'ui-sans-serif', 'system-ui', '-apple-system',
+          'Plus Jakarta Sans', 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system',
           'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif',
         ],
         mono: [
@@ -87,17 +95,26 @@ const config: Config = {
           'Menlo', 'Monaco', 'Consolas', 'monospace',
         ],
       },
+      letterSpacing: {
+        tightest: '-0.03em',
+      },
       fontSize: {
         '2xs': ['0.625rem', { lineHeight: '0.875rem' }],
       },
       borderRadius: {
+        'xl':  '0.875rem',
+        '2xl': '1rem',
+        '3xl': '1.25rem',
         '4xl': '2rem',
       },
       boxShadow: {
         'card':       'var(--shadow-card)',
         'card-hover': 'var(--shadow-card-hover)',
+        'card-brand': '0 1px 3px 0 rgba(30,64,175,0.08), 0 1px 2px -1px rgba(30,64,175,0.05)',
+        'card-brand-hover': '0 10px 24px -4px rgba(30,64,175,0.12), 0 4px 8px -2px rgba(30,64,175,0.08)',
         'sidebar':    '2px 0 8px -2px rgb(0 0 0 / 0.15)',
         'dropdown':   'var(--shadow-dropdown)',
+        'ring-brand': '0 0 0 4px rgba(30,64,175,0.12)',
       },
       animation: {
         'fade-in':       'fadeIn 0.2s ease-in-out',

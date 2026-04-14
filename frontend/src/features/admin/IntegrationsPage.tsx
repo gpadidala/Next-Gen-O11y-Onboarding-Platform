@@ -74,14 +74,17 @@ export default function IntegrationsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
-          <PlugZap className="h-6 w-6 text-brand-600" />
-          Integrations
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Configure the read paths the platform uses to reconcile CMDB against
-          LGTM ingestion. Changes are persisted to the local Postgres and take
-          effect on the next probe cycle.
+        <div className="page-eyebrow">
+          <PlugZap className="h-3 w-3" strokeWidth={3} />
+          Read-path control plane
+        </div>
+        <h1 className="page-title">Integrations</h1>
+        <p className="page-subtitle">
+          Configure the base URL, bearer token, and mock/live mode for every
+          upstream system — CMDB, Mimir, Loki, Tempo, Pyroscope, Faro, Grafana,
+          Blackbox. Changes persist to local Postgres and take effect on the
+          next probe cycle. Click <strong>Run&nbsp;probe</strong> to pull data
+          now.
         </p>
       </div>
 

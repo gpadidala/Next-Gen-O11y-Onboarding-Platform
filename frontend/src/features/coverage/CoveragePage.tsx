@@ -114,14 +114,17 @@ export default function CoveragePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
-            <Target className="h-6 w-6 text-brand-600" />
-            Coverage &amp; Adoption
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Reconciliation of the CMDB source of truth against live LGTM ingestion.
+          <div className="page-eyebrow">
+            <Target className="h-3 w-3" strokeWidth={3} />
+            Leadership cockpit
+          </div>
+          <h1 className="page-title">Coverage &amp; Adoption</h1>
+          <p className="page-subtitle">
+            Reconciliation of the CMDB source of truth against live LGTM
+            ingestion. Pre-aggregated daily so leadership views load in under
+            500&nbsp;ms.
           </p>
         </div>
         <div className="flex gap-2">
