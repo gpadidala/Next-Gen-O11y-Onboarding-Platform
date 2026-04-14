@@ -6,6 +6,7 @@ import apiClient from './client';
 import type {
   IntegrationConfig,
   IntegrationConfigUpdate,
+  IntegrationRunResult,
   IntegrationTarget,
   IntegrationTestResult,
 } from '@/types/integration';
@@ -38,6 +39,15 @@ export async function testIntegration(
 ): Promise<IntegrationTestResult> {
   const r = await apiClient.post<IntegrationTestResult>(
     `/integrations/${target}/test`,
+  );
+  return r.data;
+}
+
+export async function runIntegration(
+  target: IntegrationTarget,
+): Promise<IntegrationRunResult> {
+  const r = await apiClient.post<IntegrationRunResult>(
+    `/integrations/${target}/run`,
   );
   return r.data;
 }

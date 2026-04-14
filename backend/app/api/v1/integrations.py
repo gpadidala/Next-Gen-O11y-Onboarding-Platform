@@ -19,8 +19,10 @@ from app.schemas.integration import (
     INTEGRATION_TARGETS,
     IntegrationConfigRead,
     IntegrationConfigUpdate,
+    IntegrationRunResult,
     IntegrationTestResult,
 )
+from app.services.integration_runner import run_integration
 from app.services.integration_service import (
     seed_defaults_if_empty,
     test_integration,
@@ -97,6 +99,22 @@ async def test_integration_endpoint(
     except LookupError as exc:
         raise NotFoundError(detail=str(exc)) from exc
     return IntegrationTestResult(**result)
+
+
+@router.post(
+    "/{target}/run",
+    response_model=IntegrationRunResult,
+    status_code=status.HTTP_200_OK,
+    operation_id="runIntegration",
+    summary="Run the probe/sync for this target and return a categorized result",
+)
+async def run_integration_endpoint(
+    target: str, db: DbSession
+) -> IntegrationRunResult:
+    if target not in INTEGRATION_TARGETS:
+        raise NotFoundError(detail=f"Unknown target {target!r}.")
+    result = await run_integration(db, target)
+    return IntegrationRunResult(**result)
 
 
 @router.post(

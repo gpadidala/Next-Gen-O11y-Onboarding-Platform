@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Database,
   PlugZap,
+  Play,
   Save,
   TestTube2,
   Server,
@@ -22,12 +23,14 @@ import {
 } from 'lucide-react';
 import {
   listIntegrations,
+  runIntegration,
   updateIntegration,
   testIntegration,
 } from '@/api/integrations';
 import type {
   IntegrationConfig,
   IntegrationConfigUpdate,
+  IntegrationRunResult,
   IntegrationTarget,
   IntegrationTestResult,
 } from '@/types/integration';
@@ -133,6 +136,9 @@ function IntegrationCard({
   const [testResult, setTestResult] = useState<IntegrationTestResult | null>(
     null,
   );
+  const [running, setRunning] = useState(false);
+  const [runResult, setRunResult] = useState<IntegrationRunResult | null>(null);
+  const [runError, setRunError] = useState<string | null>(null);
   const [showToken, setShowToken] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -196,6 +202,24 @@ function IntegrationCard({
       });
     } finally {
       setTesting(false);
+    }
+  };
+
+  const runProbe = async () => {
+    try {
+      setRunning(true);
+      setRunError(null);
+      const result = await runIntegration(row.target);
+      setRunResult(result);
+    } catch (err) {
+      const msg =
+        typeof err === 'object' && err && 'detail' in err
+          ? (err as { detail: string }).detail
+          : 'Run failed.';
+      setRunError(msg);
+      setRunResult(null);
+    } finally {
+      setRunning(false);
     }
   };
 
@@ -302,6 +326,15 @@ function IntegrationCard({
                 </div>
                 <div className="mt-0.5 break-all">{testResult.message}</div>
               </div>
+            )}
+            {runError && (
+              <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-800">
+                <div className="font-medium">Run failed</div>
+                <div className="mt-0.5 break-all">{runError}</div>
+              </div>
+            )}
+            {runResult && runResult.target === row.target && (
+              <RunResultPanel result={runResult} />
             )}
           </>
         ) : (
@@ -421,9 +454,85 @@ function IntegrationCard({
               <TestTube2 className="h-3.5 w-3.5" />
               {testing ? 'Testing…' : 'Test connection'}
             </button>
+            <button
+              type="button"
+              onClick={runProbe}
+              disabled={running}
+              className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+            >
+              <Play className="h-3.5 w-3.5" />
+              {running ? 'Running…' : 'Run probe'}
+            </button>
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ── Categorized run-result panel ────────────────────────────────────── */
+
+function RunResultPanel({ result }: { result: IntegrationRunResult }) {
+  const tone =
+    result.status === 'failed'
+      ? 'border-red-200 bg-red-50'
+      : 'border-emerald-200 bg-emerald-50';
+  const headerTone =
+    result.status === 'failed' ? 'text-red-900' : 'text-emerald-900';
+  const badgeTone =
+    result.status === 'mock'
+      ? 'bg-amber-100 text-amber-800'
+      : result.status === 'failed'
+        ? 'bg-red-100 text-red-800'
+        : 'bg-emerald-100 text-emerald-800';
+  const durationMs =
+    new Date(result.finished_at).getTime() -
+    new Date(result.started_at).getTime();
+  return (
+    <div className={`mt-3 rounded-md border p-3 ${tone}`}>
+      <div
+        className={`flex items-center justify-between text-xs font-medium ${headerTone}`}
+      >
+        <span>
+          {result.items_onboarded}/{result.items_processed} items ·{' '}
+          {durationMs}ms
+        </span>
+        <span className={`rounded px-2 py-0.5 text-xs font-medium ${badgeTone}`}>
+          {result.status}
+        </span>
+      </div>
+      <p className={`mt-0.5 text-xs ${headerTone}`}>{result.message}</p>
+      {result.categories.length > 0 && (
+        <div className="mt-3">
+          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-600">
+            By {result.category_label}
+          </div>
+          <div className="space-y-1.5">
+            {result.categories.map((c) => (
+              <div key={c.label}>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-medium text-slate-700">{c.label}</span>
+                  <span className="text-slate-500">
+                    {c.onboarded}/{c.total} · {c.pct.toFixed(0)}%
+                  </span>
+                </div>
+                <div className="mt-0.5 h-1.5 overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    className={`h-full rounded-full ${
+                      c.pct >= 80
+                        ? 'bg-emerald-500'
+                        : c.pct >= 50
+                          ? 'bg-amber-500'
+                          : 'bg-red-500'
+                    }`}
+                    style={{ width: `${Math.min(100, c.pct)}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -100,3 +100,32 @@ class IntegrationTestResult(BaseModel):
     status: str
     message: str
     tested_at: datetime
+
+
+class CategoryBreakdown(BaseModel):
+    """A single category row for the 'Run probe' result panel.
+
+    Example: for CMDB, one row per portfolio with the number of apps
+    owned; for the Mimir probe, one row per portfolio with the count
+    of apps that successfully reported active series.
+    """
+
+    label: str
+    total: int = 0
+    onboarded: int = 0
+    pct: float = 0.0
+
+
+class IntegrationRunResult(BaseModel):
+    """Response to POST /integrations/{target}/run."""
+
+    target: str
+    ok: bool
+    status: str  # success | mock | failed
+    message: str
+    started_at: datetime
+    finished_at: datetime
+    items_processed: int = 0
+    items_onboarded: int = 0
+    category_label: str = "Portfolio"
+    categories: list[CategoryBreakdown] = Field(default_factory=list)

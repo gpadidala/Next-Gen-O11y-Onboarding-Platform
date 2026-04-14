@@ -60,3 +60,23 @@ export interface IntegrationTestResult {
   message: string;
   tested_at: string;
 }
+
+export interface CategoryBreakdown {
+  label: string;
+  total: number;
+  onboarded: number;
+  pct: number;
+}
+
+export interface IntegrationRunResult {
+  target: string;
+  ok: boolean;
+  status: string;
+  message: string;
+  started_at: string;
+  finished_at: string;
+  items_processed: number;
+  items_onboarded: number;
+  category_label: string;
+  categories: CategoryBreakdown[];
+}

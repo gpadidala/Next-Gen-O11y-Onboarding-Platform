@@ -76,23 +76,27 @@ class Settings(BaseSettings):
     SLACK_WEBHOOK_URL: str = ""
 
     # ── CMDB (v2 — Coverage & Adoption) ──────────────────────────────────
-    CMDB_BASE_URL: str = "http://mock-cmdb.internal"
+    # Defaults are intentionally empty so the app boots without any real
+    # LGTM / CMDB prerequisites. Operators configure these at runtime via
+    # the Integrations admin page; mock mode keeps the stack usable until
+    # they do.
+    CMDB_BASE_URL: str = ""
     CMDB_API_TOKEN: SecretStr = SecretStr("")
     CMDB_SYNC_PAGE_SIZE: int = Field(default=500, ge=10, le=5000)
     CMDB_SYNC_ENABLED: bool = True
 
     # ── LGTM probe endpoints (v2) ────────────────────────────────────────
-    GRAFANA_BASE_URL: str = "http://mock-grafana.internal"
+    GRAFANA_BASE_URL: str = ""
     GRAFANA_API_TOKEN: SecretStr = SecretStr("")
     GRAFANA_USAGE_SOURCE: Literal["api", "mimir"] = "api"
     GRAFANA_TEAM_APP_MAP_URL: str = ""
 
-    MIMIR_BASE_URL: str = "http://mock-mimir.internal"
-    LOKI_BASE_URL: str = "http://mock-loki.internal"
-    TEMPO_BASE_URL: str = "http://mock-tempo.internal"
-    PYROSCOPE_BASE_URL: str = "http://mock-pyroscope.internal"
-    FARO_BASE_URL: str = "http://mock-faro.internal"
-    BLACKBOX_CONFIG_URL: str = "http://mock-blackbox.internal/config"
+    MIMIR_BASE_URL: str = ""
+    LOKI_BASE_URL: str = ""
+    TEMPO_BASE_URL: str = ""
+    PYROSCOPE_BASE_URL: str = ""
+    FARO_BASE_URL: str = ""
+    BLACKBOX_CONFIG_URL: str = ""
 
     COVERAGE_FRESHNESS_HOURS: int = Field(default=24, ge=1, le=168)
     SCHEDULER_ENABLED: bool = True
