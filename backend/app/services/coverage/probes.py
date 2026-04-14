@@ -27,6 +27,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import Settings
 from app.models.application import ApplicationMetadata
 from app.models.coverage import LgtmAppCoverage, SyntheticUrl
+from app.services.integration_service import resolve_integration
 
 logger: structlog.stdlib.BoundLogger = structlog.get_logger(__name__)
 
@@ -138,6 +139,16 @@ async def _upsert_coverage_row(
     await db.execute(stmt)
 
 
+_SIGNAL_TO_TARGET: dict[str, str] = {
+    "metrics": "mimir",
+    "logs": "loki",
+    "traces": "tempo",
+    "profiles": "pyroscope",
+    "faro": "faro",
+    "synthetics": "blackbox",
+}
+
+
 async def _run_signal_probe(
     db: AsyncSession,
     settings: Settings,
@@ -154,7 +165,25 @@ async def _run_signal_probe(
     if not app_codes:
         return ProbeResult(signal=signal, apps_onboarded=0, apps_total=0, source=source_probe)
 
-    if not settings.PROBE_USE_MOCK:
+    # Resolve the per-target integration config (DB first, env fallback).
+    target_key = _SIGNAL_TO_TARGET.get(signal)
+    use_mock = settings.PROBE_USE_MOCK
+    if target_key:
+        try:
+            cfg = await resolve_integration(db, target_key)
+            use_mock = cfg.use_mock
+            if not cfg.is_enabled:
+                logger.info("probe_skipped_disabled", signal=signal, target=target_key)
+                return ProbeResult(
+                    signal=signal,
+                    apps_onboarded=0,
+                    apps_total=len(app_codes),
+                    source=source_probe,
+                )
+        except Exception:  # noqa: BLE001
+            logger.exception("probe_config_resolve_failed", signal=signal)
+
+    if not use_mock:
         logger.warning("probe_real_mode_not_implemented", signal=signal)
         return ProbeResult(signal=signal, apps_onboarded=0, apps_total=len(app_codes), source=source_probe)
 

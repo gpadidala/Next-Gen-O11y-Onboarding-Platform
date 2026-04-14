@@ -11,6 +11,7 @@ import {
   Briefcase,
   Target,
   Users,
+  PlugZap,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
@@ -70,6 +71,11 @@ const navItems: NavItem[] = [
     to: '/grafana-usage',
     label: 'Grafana Usage',
     icon: <Users className="h-5 w-5" />,
+  },
+  {
+    to: '/admin/integrations',
+    label: 'Integrations',
+    icon: <PlugZap className="h-5 w-5" />,
   },
   {
     to: '/admin',

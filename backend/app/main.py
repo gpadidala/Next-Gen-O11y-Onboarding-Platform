@@ -12,9 +12,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from prometheus_client import make_asgi_app
 
+from app.api import deps as db_deps
 from app.api.deps import dispose_db_engine, init_db_engine
 from app.config import Settings, get_settings
 from app.jobs.scheduler import shutdown_scheduler, start_scheduler
+from app.services.integration_service import seed_defaults_if_empty
 from app.utils.exceptions import AppException
 from app.utils.logging import configure_logging
 from app.utils.metrics import PrometheusMiddleware
@@ -40,6 +42,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         version=settings.APP_VERSION,
         env=settings.APP_ENV,
     )
+
+    # Seed default integration-config rows on first boot.
+    if db_deps._async_session_factory is not None:
+        async with db_deps._async_session_factory() as session:
+            try:
+                await seed_defaults_if_empty(session)
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                logger.exception("integration_seed_failed")
 
     # APScheduler — CMDB sync, coverage probes, leadership rollups
     if settings.SCHEDULER_ENABLED:

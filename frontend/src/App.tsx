@@ -22,6 +22,9 @@ const CoveragePage = lazy(() => import('@/features/coverage/CoveragePage'));
 const GrafanaUsagePage = lazy(
   () => import('@/features/grafana-usage/GrafanaUsagePage'),
 );
+const IntegrationsPage = lazy(
+  () => import('@/features/admin/IntegrationsPage'),
+);
 
 /* -------------------------------------------------------------------------- */
 /*  Loading fallback                                                          */
@@ -74,6 +77,7 @@ export default function App() {
 
           {/* Admin panel */}
           <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/admin/integrations" element={<IntegrationsPage />} />
 
           {/* Catch-all redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />

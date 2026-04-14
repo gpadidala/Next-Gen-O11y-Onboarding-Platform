@@ -12,6 +12,7 @@ from app.models.coverage import (
     LgtmAppCoverage,
     SyntheticUrl,
 )
+from app.models.integration import IntegrationConfig
 from app.models.onboarding import (
     HostingPlatform,
     OnboardingRequest,
@@ -35,6 +36,7 @@ __all__ = [
     "EnvironmentReadiness",
     "GrafanaRbacUsage",
     "HostingPlatform",
+    "IntegrationConfig",
     "LgtmAppCoverage",
     "OnboardingRequest",
     "OnboardingStatus",

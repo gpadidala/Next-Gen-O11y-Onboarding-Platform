@@ -18,6 +18,7 @@ from app.config import Settings, get_settings
 from app.mcp.cmdb_client import CMDBAppPayload, CMDBClient
 from app.models.application import ApplicationMetadata
 from app.models.coverage import CmdbSyncRun
+from app.services.integration_service import resolve_integration
 
 logger: structlog.stdlib.BoundLogger = structlog.get_logger(__name__)
 
@@ -30,11 +31,16 @@ class SyncResult:
     status: str
 
 
-def _build_client(settings: Settings) -> CMDBClient:
+async def _build_client(db: AsyncSession, settings: Settings) -> CMDBClient:
+    """Build a CMDB client from the DB-backed integration config.
+
+    Falls back to env vars via ``resolve_integration`` if no row exists.
+    """
+    cfg = await resolve_integration(db, "cmdb")
     return CMDBClient(
-        base_url=settings.CMDB_BASE_URL,
-        api_token=settings.CMDB_API_TOKEN.get_secret_value(),
-        use_mock=settings.PROBE_USE_MOCK,
+        base_url=cfg.base_url,
+        api_token=cfg.auth_token,
+        use_mock=cfg.use_mock,
     )
 
 
@@ -101,7 +107,7 @@ async def run_cmdb_sync(
     await db.flush()
     run_id = str(run.id)
 
-    client = _build_client(settings)
+    client = await _build_client(db, settings)
 
     upserted = 0
     seen_codes: set[str] = set()

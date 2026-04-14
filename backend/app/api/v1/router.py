@@ -16,6 +16,7 @@ from app.api.v1 import (
     governance,
     grafana_usage,
     health,
+    integrations,
     lookup,
     onboarding,
     similarity,
@@ -36,3 +37,4 @@ router.include_router(cmdb.router, prefix="/cmdb")
 router.include_router(coverage.router, prefix="/coverage")
 router.include_router(grafana_usage.router, prefix="/grafana-usage")
 router.include_router(synthetics.router, prefix="/synthetics")
+router.include_router(integrations.router, prefix="/integrations")
