@@ -1,5 +1,9 @@
 # Architecture Overview
 
+<p align="center">
+  <img src="../assets/architecture.svg" alt="Six-layer architecture diagram" width="100%">
+</p>
+
 ## 30,000-ft view
 
 The platform is a single FastAPI backend, a single React frontend, a single Postgres database, and one scheduler running nine cron jobs inside the backend process. Everything else — the eleven upstream integrations, the tenant LGTM stack — is external and reached through an HTTP resolver layer.

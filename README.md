@@ -3,6 +3,10 @@
 <p align="center"><em>The self-service portal + leadership cockpit for Grafana LGTM onboarding.<br>CMDB-driven · Runtime-configurable read paths · 100% rules-based · Zero LLMs.</em></p>
 
 <p align="center">
+  <img src="docs/assets/architecture.svg" alt="Architecture diagram — 6 layers: User · API · Domain · Integration · Data · Upstream Systems" width="100%">
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="MIT License">
   <img src="https://img.shields.io/badge/python-%3E%3D3.12-3776AB.svg?style=flat-square&logo=python&logoColor=white" alt="Python >=3.12">
   <img src="https://img.shields.io/badge/FastAPI-0.115-009485.svg?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI 0.115">
