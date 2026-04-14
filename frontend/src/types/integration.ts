@@ -10,7 +10,10 @@ export type IntegrationTarget =
   | 'pyroscope'
   | 'faro'
   | 'grafana'
-  | 'blackbox';
+  | 'blackbox'
+  | 'jira'
+  | 'confluence'
+  | 'servicenow';
 
 export const ALL_INTEGRATION_TARGETS: IntegrationTarget[] = [
   'cmdb',
@@ -21,6 +24,9 @@ export const ALL_INTEGRATION_TARGETS: IntegrationTarget[] = [
   'faro',
   'grafana',
   'blackbox',
+  'jira',
+  'confluence',
+  'servicenow',
 ];
 
 export interface IntegrationConfig {

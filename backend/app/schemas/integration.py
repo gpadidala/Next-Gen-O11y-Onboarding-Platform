@@ -22,6 +22,10 @@ INTEGRATION_TARGETS: list[str] = [
     "faro",
     "grafana",
     "blackbox",
+    # Work-item / ITSM integrations
+    "jira",
+    "confluence",
+    "servicenow",
 ]
 
 

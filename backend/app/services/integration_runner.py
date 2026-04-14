@@ -60,6 +60,8 @@ _COVERAGE_PROBES = {
     "blackbox": blackbox_probe,
 }
 
+_WORKITEM_TARGETS = {"jira", "confluence", "servicenow"}
+
 
 async def run_integration(
     db: AsyncSession, target: str
@@ -86,6 +88,8 @@ async def run_integration(
             return await _run_grafana(db, started, cfg)
         if target in _COVERAGE_PROBES:
             return await _run_coverage(db, started, cfg, target)
+        if target in _WORKITEM_TARGETS:
+            return await _run_workitem(db, started, cfg, target)
     except Exception as exc:  # noqa: BLE001
         logger.exception("integration_run_failed", target=target)
         return _empty_result(
@@ -228,6 +232,164 @@ async def _run_coverage(
         "items_processed": probe_result.apps_total,
         "items_onboarded": probe_result.apps_onboarded,
         "category_label": "Portfolio",
+        "categories": categories,
+    }
+
+
+async def _run_workitem(
+    db: AsyncSession, started: datetime, cfg, target: str
+) -> dict[str, Any]:
+    """Preview what each work-item target would create from staged artifacts.
+
+    Counts all rows in ``artifacts`` grouped by the artifact_type that
+    this target is responsible for:
+      * jira       → EPIC, STORY, TASK (grouped by type)
+      * confluence → auto-generated runbooks (grouped by portfolio of
+        the owning onboarding request)
+      * servicenow → CR + CTASK (grouped by artifact type)
+    """
+    from app.models.artifact import Artifact, ArtifactType
+    from app.models.onboarding import OnboardingRequest
+
+    now = datetime.now(timezone.utc)
+    source = "mock" if cfg.use_mock else "success"
+    category_label = "Type"
+    categories: list[dict[str, Any]] = []
+    items_processed = 0
+    items_onboarded = 0
+    message = ""
+
+    if target == "jira":
+        jira_types = (ArtifactType.EPIC, ArtifactType.STORY, ArtifactType.TASK)
+        rows = (
+            await db.execute(
+                select(
+                    Artifact.artifact_type,
+                    func.count().label("total"),
+                    func.sum(
+                        cast(Artifact.external_id.isnot(None), Integer)
+                    ).label("pushed"),
+                )
+                .where(Artifact.artifact_type.in_(jira_types))
+                .group_by(Artifact.artifact_type)
+            )
+        ).all()
+        for atype, total, pushed in rows:
+            total_i = int(total or 0)
+            pushed_i = int(pushed or 0)
+            pct = 100.0 * pushed_i / total_i if total_i else 0.0
+            label = getattr(atype, "value", str(atype)).upper()
+            categories.append(
+                {
+                    "label": label,
+                    "total": total_i,
+                    "onboarded": pushed_i,
+                    "pct": round(pct, 1),
+                }
+            )
+            items_processed += total_i
+            items_onboarded += pushed_i
+        message = (
+            f"{items_processed} Jira artifacts staged, "
+            f"{items_onboarded} already pushed to Jira"
+        )
+
+    elif target == "confluence":
+        category_label = "Portfolio"
+        rows = (
+            await db.execute(
+                select(
+                    OnboardingRequest.portfolio,
+                    func.count().label("total"),
+                )
+                .where(OnboardingRequest.portfolio.isnot(None))
+                .group_by(OnboardingRequest.portfolio)
+            )
+        ).all()
+        for portfolio, total in rows:
+            total_i = int(total or 0)
+            categories.append(
+                {
+                    "label": portfolio or "—",
+                    "total": total_i,
+                    "onboarded": total_i,
+                    "pct": 100.0,
+                }
+            )
+            items_processed += total_i
+            items_onboarded += total_i
+        message = (
+            f"{items_processed} onboardings would publish runbooks to "
+            f"{len(categories)} portfolio spaces"
+        )
+
+    elif target == "servicenow":
+        snow_types = (ArtifactType.CR, ArtifactType.CTASK)
+        rows = (
+            await db.execute(
+                select(
+                    Artifact.artifact_type,
+                    func.count().label("total"),
+                    func.sum(
+                        cast(Artifact.external_id.isnot(None), Integer)
+                    ).label("pushed"),
+                )
+                .where(Artifact.artifact_type.in_(snow_types))
+                .group_by(Artifact.artifact_type)
+            )
+        ).all()
+        for atype, total, pushed in rows:
+            total_i = int(total or 0)
+            pushed_i = int(pushed or 0)
+            pct = 100.0 * pushed_i / total_i if total_i else 0.0
+            label = getattr(atype, "value", str(atype)).upper()
+            categories.append(
+                {
+                    "label": label,
+                    "total": total_i,
+                    "onboarded": pushed_i,
+                    "pct": round(pct, 1),
+                }
+            )
+            items_processed += total_i
+            items_onboarded += pushed_i
+        message = (
+            f"{items_processed} ServiceNow artifacts staged "
+            f"({items_onboarded} already pushed)"
+        )
+
+    # If no staged artifacts exist, synthesize a few categories so the UI
+    # has something to show for a fresh clone.
+    if not categories:
+        if target == "jira":
+            categories = [
+                {"label": "EPIC", "total": 0, "onboarded": 0, "pct": 0.0},
+                {"label": "STORY", "total": 0, "onboarded": 0, "pct": 0.0},
+                {"label": "TASK", "total": 0, "onboarded": 0, "pct": 0.0},
+            ]
+            message = "No Jira artifacts staged yet — submit an onboarding to generate them."
+        elif target == "confluence":
+            categories = [
+                {"label": "Runbooks", "total": 0, "onboarded": 0, "pct": 0.0},
+            ]
+            message = "No onboardings yet — submit one to create runbook pages."
+        elif target == "servicenow":
+            categories = [
+                {"label": "CR", "total": 0, "onboarded": 0, "pct": 0.0},
+                {"label": "CTASK", "total": 0, "onboarded": 0, "pct": 0.0},
+            ]
+            message = "No ServiceNow artifacts staged yet."
+
+    return {
+        "target": target,
+        "ok": True,
+        "status": source,
+        "message": message,
+        "started_at": started,
+        "finished_at": now,
+        "items_processed": items_processed,
+        "items_onboarded": items_onboarded,
+        "category_label": category_label,
         "categories": categories,
     }
 

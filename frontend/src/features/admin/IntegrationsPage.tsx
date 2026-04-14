@@ -5,6 +5,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
+  BookOpen,
+  Bug,
   CheckCircle2,
   Database,
   PlugZap,
@@ -13,6 +15,7 @@ import {
   TestTube2,
   Server,
   Activity,
+  Ticket,
   Users,
   FileText,
   Gauge,
@@ -44,7 +47,44 @@ const TARGET_ICONS: Record<IntegrationTarget, React.ReactNode> = {
   faro: <Eye className="h-5 w-5" />,
   grafana: <Users className="h-5 w-5" />,
   blackbox: <Globe className="h-5 w-5" />,
+  jira: <Bug className="h-5 w-5" />,
+  confluence: <BookOpen className="h-5 w-5" />,
+  servicenow: <Ticket className="h-5 w-5" />,
 };
+
+interface IntegrationGroup {
+  title: string;
+  subtitle: string;
+  targets: IntegrationTarget[];
+}
+
+const INTEGRATION_GROUPS: IntegrationGroup[] = [
+  {
+    title: 'Source of truth',
+    subtitle: 'The CMDB catalog every other integration reconciles against.',
+    targets: ['cmdb'],
+  },
+  {
+    title: 'Observability read path',
+    subtitle:
+      'LGTM components + Grafana RBAC. Run probes to pull current ingestion per app.',
+    targets: [
+      'mimir',
+      'loki',
+      'tempo',
+      'pyroscope',
+      'faro',
+      'blackbox',
+      'grafana',
+    ],
+  },
+  {
+    title: 'Work items & ITSM',
+    subtitle:
+      'Downstream targets for onboarding artifacts — Jira stories, Confluence runbooks, ServiceNow change records.',
+    targets: ['jira', 'confluence', 'servicenow'],
+  },
+];
 
 export default function IntegrationsPage() {
   const [rows, setRows] = useState<IntegrationConfig[]>([]);
@@ -105,18 +145,46 @@ export default function IntegrationsPage() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {rows.map((row) => (
-            <IntegrationCard
-              key={row.target}
-              row={row}
-              onUpdated={(updated) =>
-                setRows((prev) =>
-                  prev.map((r) => (r.target === updated.target ? updated : r)),
-                )
-              }
-            />
-          ))}
+        <div className="space-y-8">
+          {INTEGRATION_GROUPS.map((group) => {
+            const groupRows = rows.filter((r) =>
+              group.targets.includes(r.target),
+            );
+            if (groupRows.length === 0) return null;
+            return (
+              <section key={group.title}>
+                <div className="mb-3 flex items-baseline justify-between">
+                  <div>
+                    <h2 className="text-sm font-bold uppercase tracking-widest text-brand-800">
+                      {group.title}
+                    </h2>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      {group.subtitle}
+                    </p>
+                  </div>
+                  <span className="text-xs font-medium text-slate-400">
+                    {groupRows.length}{' '}
+                    {groupRows.length === 1 ? 'target' : 'targets'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {groupRows.map((row) => (
+                    <IntegrationCard
+                      key={row.target}
+                      row={row}
+                      onUpdated={(updated) =>
+                        setRows((prev) =>
+                          prev.map((r) =>
+                            r.target === updated.target ? updated : r,
+                          ),
+                        )
+                      }
+                    />
+                  ))}
+                </div>
+              </section>
+            );
+          })}
         </div>
       )}
     </div>

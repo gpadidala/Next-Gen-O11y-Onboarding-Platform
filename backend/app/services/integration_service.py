@@ -120,6 +120,50 @@ DEFAULT_INTEGRATIONS: list[dict[str, Any]] = [
         "settings_token": None,
         "extra_config": {},
     },
+    {
+        "target": "jira",
+        "display_name": "Atlassian Jira",
+        "description": (
+            "Work-item backend for Epics, Stories, Tasks, and Subtasks "
+            "generated during onboarding submission."
+        ),
+        "settings_base_url": "JIRA_MCP_URL",
+        "settings_token": "JIRA_MCP_API_KEY",
+        "extra_config": {
+            "project_key": "OBS",
+            "default_issue_type": "Story",
+            "default_priority": "Medium",
+        },
+    },
+    {
+        "target": "confluence",
+        "display_name": "Atlassian Confluence",
+        "description": (
+            "Knowledge base for onboarding runbooks, playbooks, and "
+            "auto-generated observability documentation."
+        ),
+        "settings_base_url": "CONFLUENCE_MCP_URL",
+        "settings_token": "CONFLUENCE_MCP_API_KEY",
+        "extra_config": {
+            "space_key": "OBS",
+            "parent_page_title": "Observability Onboarding",
+        },
+    },
+    {
+        "target": "servicenow",
+        "display_name": "ServiceNow ITSM",
+        "description": (
+            "Change Request source of truth. Approved onboardings create "
+            "a CR that cascades into change tasks (CTASKs)."
+        ),
+        "settings_base_url": "SERVICENOW_MCP_URL",
+        "settings_token": "SERVICENOW_MCP_API_KEY",
+        "extra_config": {
+            "change_type": "normal",
+            "assignment_group": "observability-platform",
+            "default_risk": "low",
+        },
+    },
 ]
 
 
@@ -354,4 +398,7 @@ def _health_path_for(target: str) -> str:
         "faro": "/-/ready",
         "grafana": "/api/health",
         "blackbox": "/",
+        "jira": "/rest/api/2/serverInfo",
+        "confluence": "/rest/api/space?limit=1",
+        "servicenow": "/api/now/table/change_request?sysparm_limit=1",
     }.get(target, "/")
