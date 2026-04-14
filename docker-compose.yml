@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: obsplatform
       POSTGRES_PASSWORD: obsplatform
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -21,7 +21,7 @@ services:
       dockerfile: Dockerfile
     environment:
       DATABASE_URL: postgresql+asyncpg://obsplatform:obsplatform@db:5432/obsplatform
-      CORS_ORIGINS_STR: http://localhost:3000,http://localhost:5173
+      CORS_ORIGINS_STR: http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:5173,http://localhost:5174
       LOG_LEVEL: INFO
       APP_ENV: development
       APP_DEBUG: "true"
@@ -30,8 +30,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - ./backend/app:/app/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
@@ -42,7 +40,7 @@ services:
     environment:
       VITE_API_URL: http://backend:8000
     ports:
-      - "3000:3000"
+      - "3002:3000"
     depends_on:
       - backend
 

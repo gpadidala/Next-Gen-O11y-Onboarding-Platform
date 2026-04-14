@@ -54,7 +54,10 @@ class Settings(BaseSettings):
     # ── CORS ─────────────────────────────────────────────────────────────
     # Store as a plain string; split into list via the property below.
     # This avoids Pydantic Settings trying to JSON-parse a comma-separated value.
-    CORS_ORIGINS_STR: str = "http://localhost:3000,http://localhost:5173"
+    CORS_ORIGINS_STR: str = (
+        "http://localhost:3000,http://localhost:3001,http://localhost:3002,"
+        "http://localhost:5173,http://localhost:5174"
+    )
 
     @property
     def CORS_ORIGINS(self) -> list[str]:

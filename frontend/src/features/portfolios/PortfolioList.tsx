@@ -1,12 +1,14 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Layers } from 'lucide-react';
+import { ChevronRight, Layers, AlertTriangle, RefreshCw } from 'lucide-react';
 import {
-  RETAIL_PORTFOLIOS,
   PILLARS,
   portfolioPillarAvg,
   overallPct,
   appStatus,
+  type Portfolio,
 } from './data';
+import { listPortfolios } from '@/api/portfolios';
 
 /* ── helpers ──────────────────────────────────────────────────────────────── */
 
@@ -20,12 +22,98 @@ function pctColor(pct: number) {
 /* ── component ────────────────────────────────────────────────────────────── */
 
 export default function PortfolioList() {
-  const totalApps = RETAIL_PORTFOLIOS.reduce((n, p) => n + p.apps.length, 0);
+  const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const rows = await listPortfolios();
+      setPortfolios(rows);
+    } catch (err) {
+      const msg =
+        typeof err === 'object' && err && 'detail' in err
+          ? (err as { detail: string }).detail
+          : 'Failed to load portfolios from CMDB.';
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  if (loading && portfolios.length === 0) {
+    return (
+      <div className="space-y-4 p-6">
+        <div className="h-8 w-64 animate-pulse rounded-md bg-slate-200" />
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="h-56 animate-pulse rounded-xl border border-slate-200 bg-slate-100"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-4 p-6">
+        <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <AlertTriangle className="mt-0.5 h-4 w-4" />
+          <div className="flex-1">
+            <p className="font-medium">Could not load Retail Portfolios</p>
+            <p className="mt-1 text-xs">{error}</p>
+            <button
+              type="button"
+              onClick={load}
+              className="mt-2 inline-flex items-center gap-1 text-xs font-medium underline"
+            >
+              <RefreshCw className="h-3 w-3" />
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (portfolios.length === 0) {
+    return (
+      <div className="space-y-4 p-6">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-center">
+          <p className="text-sm font-medium text-amber-900">
+            No portfolios in the CMDB yet.
+          </p>
+          <p className="mt-1 text-xs text-amber-700">
+            Go to{' '}
+            <Link
+              to="/admin/integrations"
+              className="font-medium underline"
+            >
+              Integrations
+            </Link>{' '}
+            and click <strong>Run probe</strong> on the CMDB card to pull
+            the application catalog.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const totalApps = portfolios.reduce((n, p) => n + p.apps.length, 0);
 
   const platformAvg = Math.round(
-    RETAIL_PORTFOLIOS.reduce((sum, p) => {
+    portfolios.reduce((sum, p) => {
       return sum + overallPct(portfolioPillarAvg(p.apps));
-    }, 0) / RETAIL_PORTFOLIOS.length,
+    }, 0) / portfolios.length,
   );
 
   return (
@@ -60,7 +148,7 @@ export default function PortfolioList() {
               Retail Portfolios
             </h1>
             <p className="mt-0.5 text-sm" style={{ color: 'rgb(var(--text-secondary))' }}>
-              O11y onboarding coverage · {RETAIL_PORTFOLIOS.length} portfolios · {totalApps} applications
+              O11y onboarding coverage · {portfolios.length} portfolios · {totalApps} applications
             </p>
           </div>
         </div>
@@ -72,7 +160,7 @@ export default function PortfolioList() {
             style={{ borderColor: 'rgb(var(--border-color))', background: 'rgb(var(--surface-secondary))' }}
           >
             <div className="text-2xl font-bold" style={{ color: 'rgb(var(--text-primary))' }}>
-              {RETAIL_PORTFOLIOS.length}
+              {portfolios.length}
             </div>
             <div className="text-xs mt-0.5" style={{ color: 'rgb(var(--text-muted))' }}>Portfolios</div>
           </div>
@@ -108,9 +196,9 @@ export default function PortfolioList() {
         <div className="grid grid-cols-6 gap-3">
           {PILLARS.map(p => {
             const avg = Math.round(
-              RETAIL_PORTFOLIOS.reduce((sum, port) => {
+              portfolios.reduce((sum, port) => {
                 return sum + portfolioPillarAvg(port.apps)[p.key];
-              }, 0) / RETAIL_PORTFOLIOS.length,
+              }, 0) / portfolios.length,
             );
             return (
               <div key={p.key} className="text-center">
@@ -137,7 +225,7 @@ export default function PortfolioList() {
 
       {/* ── PORTFOLIO GRID ───────────────────────────────────────────────── */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {RETAIL_PORTFOLIOS.map(portfolio => {
+        {portfolios.map(portfolio => {
           const avg       = portfolioPillarAvg(portfolio.apps);
           const overall   = overallPct(avg);
           const complete  = portfolio.apps.filter(a => appStatus(a.pillars) === 'complete').length;

@@ -1,13 +1,14 @@
+import { useEffect, useState } from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
-import { ChevronRight, ArrowRight } from 'lucide-react';
+import { ChevronRight, ArrowRight, AlertTriangle, RefreshCw } from 'lucide-react';
 import {
-  RETAIL_PORTFOLIOS,
   PILLARS,
   overallPct,
   portfolioPillarAvg,
   appStatus,
-  type PillarCoverage,
+  type Portfolio,
 } from './data';
+import { getPortfolio } from '@/api/portfolios';
 
 /* ── helpers ──────────────────────────────────────────────────────────────── */
 
@@ -74,9 +75,78 @@ function PillarSummaryCard({
 
 export default function PortfolioDetail() {
   const { id } = useParams<{ id: string }>();
-  const portfolio = RETAIL_PORTFOLIOS.find(p => p.id === id);
+  const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
-  if (!portfolio) return <Navigate to="/portfolios" replace />;
+  const load = async () => {
+    if (!id) return;
+    try {
+      setLoading(true);
+      setError(null);
+      setNotFound(false);
+      const row = await getPortfolio(id);
+      setPortfolio(row);
+    } catch (err) {
+      const status =
+        typeof err === 'object' && err && 'status' in err
+          ? (err as { status: number }).status
+          : 0;
+      if (status === 404) {
+        setNotFound(true);
+      } else {
+        const msg =
+          typeof err === 'object' && err && 'detail' in err
+            ? (err as { detail: string }).detail
+            : 'Failed to load portfolio.';
+        setError(msg);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  if (notFound) return <Navigate to="/portfolios" replace />;
+
+  if (loading && !portfolio) {
+    return (
+      <div className="space-y-4 p-6">
+        <div className="h-8 w-64 animate-pulse rounded-md bg-slate-200" />
+        <div className="h-40 animate-pulse rounded-xl border border-slate-200 bg-slate-100" />
+        <div className="h-64 animate-pulse rounded-xl border border-slate-200 bg-slate-100" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-4 p-6">
+        <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <AlertTriangle className="mt-0.5 h-4 w-4" />
+          <div className="flex-1">
+            <p className="font-medium">Could not load portfolio</p>
+            <p className="mt-1 text-xs">{error}</p>
+            <button
+              type="button"
+              onClick={load}
+              className="mt-2 inline-flex items-center gap-1 text-xs font-medium underline"
+            >
+              <RefreshCw className="h-3 w-3" />
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!portfolio) return null;
 
   const portfolioAvg  = portfolioPillarAvg(portfolio.apps);
   const overallAvgPct = overallPct(portfolioAvg);

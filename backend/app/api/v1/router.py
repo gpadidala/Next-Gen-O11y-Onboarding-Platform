@@ -19,6 +19,7 @@ from app.api.v1 import (
     integrations,
     lookup,
     onboarding,
+    portfolios,
     similarity,
     synthetics,
 )
@@ -38,3 +39,4 @@ router.include_router(coverage.router, prefix="/coverage")
 router.include_router(grafana_usage.router, prefix="/grafana-usage")
 router.include_router(synthetics.router, prefix="/synthetics")
 router.include_router(integrations.router, prefix="/integrations")
+router.include_router(portfolios.router, prefix="/portfolios")
